@@ -237,7 +237,9 @@
       <div class="sub-form" id="form-gestor">
         <select id="gestor-usuario">
           <option value="">— Selecione seu nome —</option>
+          <option value="Cleusa Da Silva Salomao (PAAC)">Cleusa Da Silva Salomao (PAAC)</option>
           <option value="Guilherme (Vice-diretor)">Guilherme (Vice-diretor)</option>
+          <option value="Luci Mary Venancio De Andrade Ligasacchi (PAAC)">Luci Mary Venancio De Andrade Ligasacchi (PAAC)</option>
           <option value="Raffael (Diretor)">Raffael (Diretor)</option>
           <option value="Ricardo (Vice-diretor)">Ricardo (Vice-diretor)</option>
           <option value="Silvana (CGPG)">Silvana (CGPG)</option>
@@ -253,7 +255,7 @@
             <option value="Diretor">Diretor</option>
             <option value="Vice-diretor">Vice-diretor</option>
             <option value="CGPG">CGPG</option>
-            <option value="PCA">PCA</option>
+            <option value="PAAC">PAAC</option>
           </select>
           <input type="text" id="boot-usuario" placeholder="Usuário">
           <input type="password" id="boot-senha" placeholder="Senha">
@@ -352,7 +354,7 @@
       <div class="assinaturas">
         <div class="linha">Diretor / Vice-diretor</div>
         <div class="linha">CGPG</div>
-        <div class="linha">PCA</div>
+        <div class="linha">PAAC</div>
         <div class="linha">Professor</div>
       </div>
     </div>
@@ -402,7 +404,7 @@
       <div class="lista-contas" id="lista-gestores"></div>
       <div class="linha-conta no-print" style="max-width:600px;">
         <input class="curto" type="text" id="novo-gestor-nome" placeholder="Nome completo">
-        <select id="novo-gestor-papel"><option>Diretor</option><option>Vice-diretor</option><option>CGPG</option><option>PCA</option></select>
+        <select id="novo-gestor-papel"><option>Diretor</option><option>Vice-diretor</option><option>CGPG</option><option>PAAC</option></select>
         <input class="curto" type="text" id="novo-gestor-usuario" placeholder="Usuário">
         <input class="curto" type="text" id="novo-gestor-senha" placeholder="Senha">
         <button id="btn-add-gestor">+ Adicionar</button>
@@ -11832,7 +11834,9 @@ firebase/app/dist/esm/index.esm.js:
     {"nome":"Guilherme (Vice-diretor)","papel":"Vice-diretor","usuario":"Guilherme (Vice-diretor)","senha":"Gu#47$v"},
     {"nome":"Raffael (Diretor)","papel":"Diretor","usuario":"Raffael (Diretor)","senha":"265844"},
     {"nome":"Ricardo (Vice-diretor)","papel":"Vice-diretor","usuario":"Ricardo (Vice-diretor)","senha":"Ri!82*w"},
-    {"nome":"Silvana (CGPG)","papel":"CGPG","usuario":"Silvana (CGPG)","senha":"Si@36#g"}
+    {"nome":"Silvana (CGPG)","papel":"CGPG","usuario":"Silvana (CGPG)","senha":"Si@36#g"},
+    {"nome":"Cleusa Da Silva Salomao (PAAC)","papel":"PAAC","usuario":"Cleusa Da Silva Salomao (PAAC)","senha":"gVT*t8"},
+    {"nome":"Luci Mary Venancio De Andrade Ligasacchi (PAAC)","papel":"PAAC","usuario":"Luci Mary Venancio De Andrade Ligasacchi (PAAC)","senha":"W@B9@k"}
   ];
 
   // Sincroniza contas com as mesmas credenciais da FE-1 (Ficha de Evolução)
@@ -12051,14 +12055,18 @@ firebase/app/dist/esm/index.esm.js:
     "Guilherme (Vice-diretor)":"Gu#47$v",
     "Raffael (Diretor)":"265844",
     "Ricardo (Vice-diretor)":"Ri!82*w",
-    "Silvana (CGPG)":"Si@36#g"
+    "Silvana (CGPG)":"Si@36#g",
+    "Cleusa Da Silva Salomao (PAAC)":"gVT*t8",
+    "Luci Mary Venancio De Andrade Ligasacchi (PAAC)":"W@B9@k"
   };
   var GESTOR_PAPEIS = {
     "Thaís (CGPG)":"CGPG",
     "Guilherme (Vice-diretor)":"Vice-diretor",
     "Raffael (Diretor)":"Diretor",
     "Ricardo (Vice-diretor)":"Vice-diretor",
-    "Silvana (CGPG)":"CGPG"
+    "Silvana (CGPG)":"CGPG",
+    "Cleusa Da Silva Salomao (PAAC)":"PAAC",
+    "Luci Mary Venancio De Andrade Ligasacchi (PAAC)":"PAAC"
   };
 
   function garantirArrayContas(){
@@ -12418,7 +12426,7 @@ firebase/app/dist/esm/index.esm.js:
     if(!sessao) return false;
     if(papelChave === "professor") return sessao.tipo === "professor" && guiaAtual && sessao.dados.id === guiaAtual.professorId;
     if(sessao.tipo !== "gestor") return false;
-    if(papelChave === "pca") return sessao.dados.papel === "PCA";
+    if(papelChave === "pca") return sessao.dados.papel === "PAAC" || sessao.dados.papel === "PCA";
     if(papelChave === "pcg") return sessao.dados.papel === "CGPG";
     if(papelChave === "diretor") return sessao.dados.papel === "Diretor" || sessao.dados.papel === "Vice-diretor";
     return false;
@@ -12426,7 +12434,7 @@ firebase/app/dist/esm/index.esm.js:
   function podeValidar(papelChave){ return sessaoPodeValidar(papelChave); }
   function renderValidacoes(){
     var container = document.getElementById("status-validacao"); container.innerHTML = "";
-    [{chave:"professor",rotulo:"Professor"},{chave:"pca",rotulo:"PCA"},{chave:"pcg",rotulo:"CGPG"},{chave:"diretor",rotulo:"Diretor"}].forEach(function(p){
+    [{chave:"professor",rotulo:"Professor"},{chave:"pca",rotulo:"PAAC"},{chave:"pcg",rotulo:"CGPG"},{chave:"diretor",rotulo:"Diretor"}].forEach(function(p){
       var habilitado = podeValidar(p.chave);
       var pill = document.createElement("div");
       pill.className = "pill-validacao" + (guiaAtual.validacoes[p.chave]?" ok":"") + (habilitado?" clicavel":"");
@@ -12510,7 +12518,7 @@ firebase/app/dist/esm/index.esm.js:
     }).forEach(function(g){
       var tr = document.createElement("tr");
       var tdVal = document.createElement("td");
-      [{chave:"professor",rotulo:"Prof"},{chave:"pca",rotulo:"PCA"},{chave:"pcg",rotulo:"CGPG"},{chave:"diretor",rotulo:"Diretor"}].forEach(function(p){
+      [{chave:"professor",rotulo:"Prof"},{chave:"pca",rotulo:"PAAC"},{chave:"pcg",rotulo:"CGPG"},{chave:"diretor",rotulo:"Diretor"}].forEach(function(p){
         var podeClicar = p.chave !== "professor" && sessaoPodeValidar(p.chave);
         var pill = document.createElement("span");
         pill.className = "mini-pill" + (g.validacoes[p.chave]?" ok":"") + (podeClicar?" clicavel":"");
@@ -12588,7 +12596,7 @@ firebase/app/dist/esm/index.esm.js:
       var linha = document.createElement("div"); linha.className = "linha-conta";
       linha.innerHTML =
         '<input class="curto nome" type="text" value="'+escapeHtml(g.nome)+'">' +
-        '<select class="papel"><option'+(g.papel==="Diretor"?" selected":"")+'>Diretor</option><option'+(g.papel==="Vice-diretor"?" selected":"")+'>Vice-diretor</option><option'+(g.papel==="CGPG"?" selected":"")+'>CGPG</option><option'+(g.papel==="PCA"?" selected":"")+'>PCA</option></select>' +
+        '<select class="papel"><option'+(g.papel==="Diretor"?" selected":"")+'>Diretor</option><option'+(g.papel==="Vice-diretor"?" selected":"")+'>Vice-diretor</option><option'+(g.papel==="CGPG"?" selected":"")+'>CGPG</option><option'+(g.papel==="PAAC"?" selected":"")+'>PAAC</option></select>' +
         '<input class="curto usuario" type="text" value="'+escapeHtml(g.usuario)+'">' +
         '<input class="curto senha" type="text" value="'+escapeHtml(g.senha)+'">' +
         '<button class="perigo remover">Remover</button>';
