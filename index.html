@@ -11693,6 +11693,7 @@ firebase/app/dist/esm/index.esm.js:
 */
 
 </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (function(){
   "use strict";
@@ -11728,42 +11729,32 @@ firebase/app/dist/esm/index.esm.js:
   function escapeHtml(str){ if(!str) return ""; return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
   function senhaAleatoria(){ return Math.floor(100000 + Math.random()*900000).toString(); }
 
-  // ---------- FIREBASE ----------
-  var firebaseConfig = {
-    apiKey: "AIzaSyCjXJuwZrF15T7ox8PRNTdsFMVq1BiKQ3w",
-    authDomain: "fe1-tutoria.firebaseapp.com",
-    databaseURL: "https://fe1-tutoria-default-rtdb.firebaseio.com",
-    projectId: "fe1-tutoria",
-    storageBucket: "fe1-tutoria.firebasestorage.app",
-    messagingSenderId: "897754828958",
-    appId: "1:897754828958:web:6fd989839d94bb2d6aab8f"
-  };
-  // Caminho raiz no Realtime Database — ajuste se reaproveitar um projeto Firebase
-  // que já usa /guias, /turmas_config, /professores ou /gestores para outro sistema.
-  var RAIZ_DB = "guia_aprendizagem";
+  // ---------- SUPABASE ----------
+  // Projeto Supabase — tabela única "guiadeaprendizagem" com colunas: chave (text, PK) e dados (jsonb).
+  // Cada "lista" do app (guias, turmas_config, professores, gestores) vira uma linha,
+  // guardada como JSON dentro de "dados" — mesmo esquema de caminhos usado antes no Firebase.
+  var SUPABASE_URL = "https://shggcytvtyzbaqdmsbln.supabase.co";
+  var SUPABASE_ANON_KEY = "sb_publishable_V50P1LM4skolasnrCC-vmQ_z2ZWyKax";
+  var TABELA_AGENDA = "guiadeaprendizagem";
 
-  var fbDb = null, modoOnline = false;
-  function initFirebase(){
+  var supabaseClient = null, modoOnline = false;
+  function initSupabase(){
     try{
-      if(!window.__firebaseSDK) throw new Error("SDK do Firebase não carregou");
-      if(!firebaseConfig.apiKey || firebaseConfig.apiKey.indexOf("SUA_") === 0) throw new Error("firebaseConfig não preenchido");
-      var app = window.__firebaseSDK.initializeApp(firebaseConfig);
-      fbDb = window.__firebaseSDK.getDatabase(app);
+      if(!window.supabase || !window.supabase.createClient) throw new Error("SDK do Supabase não carregou");
+      if(!SUPABASE_URL || !SUPABASE_ANON_KEY) throw new Error("Credenciais do Supabase não preenchidas");
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       modoOnline = true;
     }catch(e){
       modoOnline = false;
       console.warn("[Guia de Aprendizagem] Modo local — sincronização desativada:", e.message);
     }
   }
-  function caminho(p){ return RAIZ_DB + "/" + p; }
-  function objParaLista(obj){ return obj ? Object.keys(obj).map(function(k){ return obj[k]; }) : []; }
-  function listaParaObj(lista){ var o={}; lista.forEach(function(item){ o[item.id]=item; }); return o; }
 
   function atualizarIndicadorConexao(ok){
     var el = document.getElementById("status-conexao");
     if(!el) return;
     if(!modoOnline){
-      el.textContent = "🔌 Modo local"; el.title = "Preencha firebaseConfig no código para sincronizar entre dispositivos."; el.style.color = "#b3261e";
+      el.textContent = "🔌 Modo local"; el.title = "Preencha SUPABASE_URL/SUPABASE_ANON_KEY no código para sincronizar entre dispositivos."; el.style.color = "#b3261e";
     } else {
       el.textContent = ok ? "☁️ Sincronizado" : "⚠️ Sem conexão"; el.style.color = ok ? "#2e7d32" : "#b98900";
     }
@@ -11774,10 +11765,14 @@ firebase/app/dist/esm/index.esm.js:
   function salvarLocal(key, lista){ localStorage.setItem(key, JSON.stringify(lista)); }
 
   function salvarRemoto(caminhoRelativo, lista){
-    if(!modoOnline || !fbDb) return;
-    window.__firebaseSDK.set(window.__firebaseSDK.ref(fbDb, caminho(caminhoRelativo)), listaParaObj(lista))
-      .then(function(){ atualizarIndicadorConexao(true); })
-      .catch(function(e){ console.warn("Falha ao sincronizar " + caminhoRelativo + ":", e); atualizarIndicadorConexao(false); });
+    if(!modoOnline || !supabaseClient) return;
+    supabaseClient
+      .from(TABELA_AGENDA)
+      .upsert({ chave: caminhoRelativo, dados: lista, atualizado_em: new Date().toISOString() }, { onConflict: "chave" })
+      .then(function(res){
+        if(res.error){ console.warn("Falha ao sincronizar " + caminhoRelativo + ":", res.error); atualizarIndicadorConexao(false); }
+        else{ atualizarIndicadorConexao(true); }
+      });
   }
 
   function salvarGuias(){ salvarLocal(STORAGE_KEY, guias); salvarRemoto("guias", guias); }
@@ -11786,12 +11781,34 @@ firebase/app/dist/esm/index.esm.js:
   function salvarGestores(){ salvarLocal(GESTORES_KEY, gestores); salvarRemoto("gestores", gestores); }
 
   function sincronizar(caminhoRelativo, aoAtualizar){
-    if(!modoOnline) return;
-    window.__firebaseSDK.onValue(window.__firebaseSDK.ref(fbDb, caminho(caminhoRelativo)), function(snap){
-      aoAtualizar(objParaLista(snap.val()));
+    if(!modoOnline || !supabaseClient) return;
+
+    function processarLinha(linha){
+      var lista = (linha && Array.isArray(linha.dados)) ? linha.dados : [];
+      aoAtualizar(lista);
       atualizarIndicadorConexao(true);
       rerenderTelaAtual();
-    }, function(){ atualizarIndicadorConexao(false); });
+    }
+
+    // Busca inicial
+    supabaseClient
+      .from(TABELA_AGENDA)
+      .select("dados")
+      .eq("chave", caminhoRelativo)
+      .maybeSingle()
+      .then(function(res){
+        if(res.error){ atualizarIndicadorConexao(false); return; }
+        processarLinha(res.data);
+      });
+
+    // Assina mudanças em tempo real para essa chave
+    supabaseClient
+      .channel("guiadeaprendizagem-" + caminhoRelativo)
+      .on("postgres_changes",
+        { event: "*", schema: "public", table: TABELA_AGENDA, filter: "chave=eq." + caminhoRelativo },
+        function(payload){ processarLinha(payload.new); }
+      )
+      .subscribe();
   }
 
   var guias = carregar(STORAGE_KEY);
@@ -12659,7 +12676,7 @@ firebase/app/dist/esm/index.esm.js:
   });
 
   // ---------- INICIALIZAÇÃO ----------
-  initFirebase();
+  initSupabase();
   mostrarTela("login");
   renderHeader();
   atualizarIndicadorConexao(modoOnline);
