@@ -278,7 +278,12 @@
   <section id="tela-lista" class="hidden">
     <div class="toolbar">
       <strong id="contador-guias">0 guias</strong>
-      <button id="btn-novo-guia">+ Novo Guia de Aprendizagem</button>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+        <button id="btn-novo-guia">+ Novo Guia de Aprendizagem</button>
+        <button class="secundario" id="btn-exportar-backup" title="Baixa backup JSON">⬇ Backup</button>
+        <button class="secundario" id="btn-importar-backup" title="Restaura backup JSON">⬆ Restaurar</button>
+        <input type="file" id="input-backup" accept=".json,application/json" class="hidden">
+      </div>
     </div>
     <div class="grid-guias" id="grid-guias"></div>
     <div class="vazio hidden" id="msg-vazio">Nenhum guia cadastrado ainda. Clique em "Novo Guia de Aprendizagem" para começar.</div>
@@ -11760,34 +11765,107 @@ firebase/app/dist/esm/index.esm.js:
     }
   }
 
-  // ---------- ESTADO / PERSISTÊNCIA ----------
-  function carregar(key){ try{ var raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : []; }catch(e){ return []; } }
-  function salvarLocal(key, lista){ localStorage.setItem(key, JSON.stringify(lista)); }
+  // ---------- ESTADO / PERSISTÊNCIA (Supabase + local robusto) ----------
+  function carregar(key){
+    try{
+      var raw = localStorage.getItem(key);
+      if(raw){ var v = JSON.parse(raw); if(Array.isArray(v)) return v; }
+    }catch(e){}
+    try{
+      var raw2 = localStorage.getItem(key + "__bak");
+      if(raw2){ var v2 = JSON.parse(raw2); if(Array.isArray(v2)) return v2; }
+    }catch(e){}
+    return [];
+  }
+  function salvarLocal(key, lista){
+    if(!Array.isArray(lista)) lista = [];
+    lista.forEach(function(item){ if(item && !item.id) item.id = uid(); });
+    try{
+      var json = JSON.stringify(lista);
+      localStorage.setItem(key, json);
+      localStorage.setItem(key + "__bak", json);
+      localStorage.setItem(key + "__ts", String(Date.now()));
+    }catch(e){
+      console.warn("Falha localStorage ("+key+"):", e);
+    }
+  }
+
+  // Mescla por id — mantém o registro com atualizadoEm mais recente
+  function mesclarListasPorId(local, remoto){
+    var map = {};
+    function considerar(item){
+      if(!item) return;
+      if(!item.id) item.id = uid();
+      var ant = map[item.id];
+      if(!ant){ map[item.id] = item; return; }
+      var tN = item.atualizadoEm || 0;
+      var tA = ant.atualizadoEm || 0;
+      if(tN >= tA) map[item.id] = item;
+    }
+    (local||[]).forEach(considerar);
+    (remoto||[]).forEach(considerar);
+    return Object.keys(map).map(function(k){ return map[k]; });
+  }
+
+  function mostrarStatusSalvamento(okNuvem){
+    var el = document.getElementById("status-conexao");
+    if(!el) return;
+    if(okNuvem){
+      el.textContent = "☁️ Salvo no Supabase";
+      el.style.color = "#2e7d32";
+      el.title = "Dados gravados na nuvem (Supabase).";
+    } else if(modoOnline){
+      el.textContent = "⚠️ Salvo só neste computador";
+      el.style.color = "#b98900";
+      el.title = "Falha ao gravar no Supabase. Os dados ficam neste navegador.";
+    } else {
+      el.textContent = "🔌 Salvo só neste computador";
+      el.style.color = "#b3261e";
+      el.title = "Supabase offline.";
+    }
+  }
 
   function salvarRemoto(caminhoRelativo, lista){
-    if(!modoOnline || !supabaseClient) return;
-    supabaseClient
+    if(!modoOnline || !supabaseClient){
+      atualizarIndicadorConexao(false);
+      return Promise.resolve(false);
+    }
+    if(!Array.isArray(lista)) lista = [];
+    lista.forEach(function(item){ if(item && !item.id) item.id = uid(); });
+    // Payload mínimo: chave + dados (jsonb). atualizado_em é opcional.
+    var payload = { chave: caminhoRelativo, dados: lista };
+    return supabaseClient
       .from(TABELA_AGENDA)
-      .upsert({ chave: caminhoRelativo, dados: lista, atualizado_em: new Date().toISOString() }, { onConflict: "chave" })
+      .upsert(payload, { onConflict: "chave" })
       .then(function(res){
-        if(res.error){ console.warn("Falha ao sincronizar " + caminhoRelativo + ":", res.error); atualizarIndicadorConexao(false); }
-        else{ atualizarIndicadorConexao(true); }
+        if(res.error){
+          console.warn("Falha Supabase ("+caminhoRelativo+"):", res.error.message || res.error);
+          atualizarIndicadorConexao(false);
+          return false;
+        }
+        atualizarIndicadorConexao(true);
+        return true;
+      })
+      .catch(function(e){
+        console.warn("Erro de rede Supabase ("+caminhoRelativo+"):", e);
+        atualizarIndicadorConexao(false);
+        return false;
       });
   }
 
-  function salvarGuias(){ salvarLocal(STORAGE_KEY, guias); salvarRemoto("guias", guias); }
-  function salvarTurmas(){ salvarLocal(TURMAS_KEY, turmasConfig); salvarRemoto("turmas_config", turmasConfig); }
-  function salvarProfessores(){ salvarLocal(PROFESSORES_KEY, professores); salvarRemoto("professores", professores); }
-  function salvarGestores(){ salvarLocal(GESTORES_KEY, gestores); salvarRemoto("gestores", gestores); }
+  function salvarGuias(){ salvarLocal(STORAGE_KEY, guias); return salvarRemoto("guias", guias); }
+  function salvarTurmas(){ salvarLocal(TURMAS_KEY, turmasConfig); return salvarRemoto("turmas_config", turmasConfig); }
+  function salvarProfessores(){ salvarLocal(PROFESSORES_KEY, professores); return salvarRemoto("professores", professores); }
+  function salvarGestores(){ salvarLocal(GESTORES_KEY, gestores); return salvarRemoto("gestores", gestores); }
 
-  function sincronizar(caminhoRelativo, aoAtualizar){
+  function sincronizar(caminhoRelativo, aoReceberRemoto){
     if(!modoOnline || !supabaseClient) return;
 
-    function processarLinha(linha){
-      var lista = (linha && Array.isArray(linha.dados)) ? linha.dados : [];
-      aoAtualizar(lista);
+    function aplicarRemoto(listaRemota){
+      // aoReceberRemoto decide o merge com o estado local
+      aoReceberRemoto(Array.isArray(listaRemota) ? listaRemota : []);
       atualizarIndicadorConexao(true);
-      rerenderTelaAtual();
+      if(typeof rerenderTelaAtual === "function") rerenderTelaAtual();
     }
 
     // Busca inicial
@@ -11797,18 +11875,68 @@ firebase/app/dist/esm/index.esm.js:
       .eq("chave", caminhoRelativo)
       .maybeSingle()
       .then(function(res){
-        if(res.error){ atualizarIndicadorConexao(false); return; }
-        processarLinha(res.data);
+        if(res.error){
+          console.warn("Leitura Supabase ("+caminhoRelativo+"):", res.error.message || res.error);
+          atualizarIndicadorConexao(false);
+          // Mesmo com erro de leitura, tenta publicar o local se houver
+          aoReceberRemoto(null); // sinaliza falha/ausência
+          return;
+        }
+        var lista = (res.data && Array.isArray(res.data.dados)) ? res.data.dados : [];
+        aplicarRemoto(lista);
       });
 
-    // Assina mudanças em tempo real para essa chave
+    // Tempo real
     supabaseClient
       .channel("guiadeaprendizagem-" + caminhoRelativo)
       .on("postgres_changes",
         { event: "*", schema: "public", table: TABELA_AGENDA, filter: "chave=eq." + caminhoRelativo },
-        function(payload){ processarLinha(payload.new); }
+        function(payload){
+          var lista = (payload.new && Array.isArray(payload.new.dados)) ? payload.new.dados : [];
+          // Em realtime também mescla (não apaga dados locais mais novos)
+          aoReceberRemoto(lista);
+          if(typeof rerenderTelaAtual === "function") rerenderTelaAtual();
+        }
       )
       .subscribe();
+  }
+
+  function exportarBackupGuias(){
+    var dump = {
+      exportadoEm: new Date().toISOString(),
+      versao: 1,
+      origem: "supabase",
+      guias: guias,
+      turmas_config: turmasConfig,
+      professores: professores,
+      gestores: gestores
+    };
+    var blob = new Blob([JSON.stringify(dump, null, 2)], {type:"application/json"});
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "backup-guia-aprendizagem-"+new Date().toISOString().slice(0,10)+".json";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ try{ URL.revokeObjectURL(a.href); }catch(e){} }, 5000);
+  }
+  function importarBackupGuias(file){
+    var reader = new FileReader();
+    reader.onload = function(ev){
+      try{
+        var dump = JSON.parse(ev.target.result);
+        if(dump.guias && Array.isArray(dump.guias)){
+          guias = mesclarListasPorId(guias, dump.guias);
+          salvarGuias();
+        }
+        if(dump.turmas_config && Array.isArray(dump.turmas_config)){
+          turmasConfig = mesclarListasPorId(turmasConfig, dump.turmas_config);
+          salvarTurmas();
+        }
+        alert("Backup importado e mesclado com os dados atuais.");
+        if(typeof renderLista === "function") renderLista();
+        if(typeof rerenderTelaAtual === "function") rerenderTelaAtual();
+      }catch(err){ alert("Arquivo de backup inválido."); }
+    };
+    reader.readAsText(file);
   }
 
   var guias = carregar(STORAGE_KEY);
@@ -12252,6 +12380,15 @@ firebase/app/dist/esm/index.esm.js:
       }
     }
   });
+  if(document.getElementById("btn-exportar-backup")){
+    document.getElementById("btn-exportar-backup").addEventListener("click", function(){ exportarBackupGuias(); });
+    document.getElementById("btn-importar-backup").addEventListener("click", function(){ document.getElementById("input-backup").click(); });
+    document.getElementById("input-backup").addEventListener("change", function(e){
+      var f = e.target.files && e.target.files[0];
+      if(f) importarBackupGuias(f);
+      e.target.value = "";
+    });
+  }
   document.getElementById("btn-novo-guia").addEventListener("click", function(){ guiaAtual = guiaVazio(); abrirForm(); });
 
   // ---------- FORM DO GUIA ----------
@@ -12307,10 +12444,12 @@ firebase/app/dist/esm/index.esm.js:
 
   function salvarAtual(mostrarAlerta){
     coletarForm();
+    if(!guiaAtual.id) guiaAtual.id = uid();
     guiaAtual.atualizadoEm = Date.now();
     var idx = guias.findIndex(function(g){return g.id===guiaAtual.id;});
     if(idx === -1){ guias.push(guiaAtual); } else { guias[idx] = guiaAtual; }
-    salvarGuias();
+    salvarLocal(STORAGE_KEY, guias);
+    var promessa = salvarRemoto("guias", guias);
     var criadas = provisionarTurmas(guiaAtual.turmas);
     if(criadas.length > 0){
       var msg = "Turma(s) nova(s) cadastrada(s) — repasse a senha ao líder e vice-líder:\n\n" +
@@ -12318,8 +12457,18 @@ firebase/app/dist/esm/index.esm.js:
       alert(msg);
     }
     if(mostrarAlerta){
-      var btn = document.getElementById("btn-salvar"); var original = btn.textContent;
-      btn.textContent = "✔ Salvo"; setTimeout(function(){ btn.textContent = original; }, 1200);
+      var btn = document.getElementById("btn-salvar");
+      if(btn){
+        var original = btn.textContent;
+        btn.textContent = "⏳ Salvando...";
+        Promise.resolve(promessa).then(function(ok){
+          mostrarStatusSalvamento(!!ok);
+          btn.textContent = ok ? "✔ Salvo no Supabase" : "✔ Salvo neste PC";
+          setTimeout(function(){ btn.textContent = original; }, 2000);
+        });
+      }
+    } else {
+      Promise.resolve(promessa).then(function(ok){ mostrarStatusSalvamento(!!ok); });
     }
   }
 
@@ -12681,18 +12830,58 @@ firebase/app/dist/esm/index.esm.js:
   renderHeader();
   atualizarIndicadorConexao(modoOnline);
 
-  sincronizar("guias", function(lista){ if(lista && lista.length){ guias = lista; salvarLocal(STORAGE_KEY, guias); } });
-  sincronizar("turmas_config", function(lista){ if(lista && lista.length){ turmasConfig = lista; salvarLocal(TURMAS_KEY, turmasConfig); } });
-  sincronizar("professores", function(lista){
-    if(lista && lista.length){ professores = lista; salvarLocal(PROFESSORES_KEY, professores); }
+  // MERGE: combina local + Supabase; se a nuvem estiver vazia e o local tiver dados, publica na nuvem
+  sincronizar("guias", function(remoto){
+    if(remoto === null){
+      // falha de leitura — tenta publicar local
+      if(guias.length) salvarRemoto("guias", guias);
+      return;
+    }
+    if(remoto.length){
+      var merged = mesclarListasPorId(guias, remoto);
+      var mudou = merged.length !== guias.length || merged.length !== remoto.length;
+      guias = merged;
+      salvarLocal(STORAGE_KEY, guias);
+      // Se o local tinha itens que a nuvem não tinha, reenvia o merge
+      if(mudou || guias.length > remoto.length) salvarRemoto("guias", guias);
+    } else if(guias.length > 0){
+      salvarRemoto("guias", guias);
+    }
+  });
+  sincronizar("turmas_config", function(remoto){
+    if(remoto === null){ if(turmasConfig.length) salvarRemoto("turmas_config", turmasConfig); return; }
+    if(remoto.length){
+      turmasConfig = mesclarListasPorId(turmasConfig, remoto);
+      salvarLocal(TURMAS_KEY, turmasConfig);
+      if(turmasConfig.length > remoto.length) salvarRemoto("turmas_config", turmasConfig);
+    } else if(turmasConfig.length > 0){
+      salvarRemoto("turmas_config", turmasConfig);
+    }
+  });
+  sincronizar("professores", function(remoto){
+    if(remoto && remoto.length){
+      professores = mesclarListasPorId(professores, remoto);
+      salvarLocal(PROFESSORES_KEY, professores);
+    }
     sincronizarContasComSeed();
     if(typeof preencherSelectProfessores === "function") preencherSelectProfessores();
   });
-  sincronizar("gestores", function(lista){
-    if(lista && lista.length){ gestores = lista; salvarLocal(GESTORES_KEY, gestores); }
+  sincronizar("gestores", function(remoto){
+    if(remoto && remoto.length){
+      gestores = mesclarListasPorId(gestores, remoto);
+      salvarLocal(GESTORES_KEY, gestores);
+    }
     sincronizarContasComSeed();
     if(typeof preencherSelectGestores === "function") preencherSelectGestores();
   });
+
+  // Auto-save a cada 2 minutos
+  setInterval(function(){
+    if(typeof sessao !== "undefined" && sessao && guias && guias.length){
+      salvarLocal(STORAGE_KEY, guias);
+      salvarRemoto("guias", guias);
+    }
+  }, 120000);
 
 })();
 
