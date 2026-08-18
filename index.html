@@ -419,7 +419,7 @@
     </div>
     <div style="overflow-x:auto;">
       <table class="tabela-gestao">
-        <thead><tr><th>Professor</th><th>Disciplina</th><th>Turmas</th><th>Bimestre</th><th>Validações</th></tr></thead>
+        <thead><tr><th>Professor</th><th>Disciplina</th><th>Turmas</th><th>Bimestre</th><th>Validações</th><th class="no-print">Ações</th></tr></thead>
         <tbody id="corpo-tabela-gestao"></tbody>
       </table>
     </div>
@@ -11805,13 +11805,51 @@ firebase/app/dist/esm/index.esm.js:
   }
 
   // ---------- ESTADO / PERSISTÊNCIA (Supabase + local robusto) ----------
+  // Fallback em memória quando localStorage está bloqueado (iframe sandbox, file:// restrito, etc.)
+  var memoriaLocal = {};
+  var storageDisponivel = null;
+
+  function testarLocalStorage(){
+    if(storageDisponivel !== null) return storageDisponivel;
+    try {
+      var k = "__guia_test__";
+      // Qualquer leitura de window.localStorage pode lançar SecurityError no sandbox
+      var ls = window.localStorage;
+      if(!ls){ storageDisponivel = false; return false; }
+      ls.setItem(k, "1");
+      ls.removeItem(k);
+      storageDisponivel = true;
+      return true;
+    } catch(e){
+      storageDisponivel = false;
+      return false;
+    }
+  }
+
+  function storageGet(key){
+    try {
+      if(testarLocalStorage()){
+        try { return window.localStorage.getItem(key); } catch(e){ /* usa memória */ }
+      }
+    } catch(e){}
+    return Object.prototype.hasOwnProperty.call(memoriaLocal, key) ? memoriaLocal[key] : null;
+  }
+  function storageSet(key, value){
+    memoriaLocal[key] = value;
+    try {
+      if(testarLocalStorage()){
+        try { window.localStorage.setItem(key, value); } catch(e){ /* já está na memória */ }
+      }
+    } catch(e){}
+  }
+
   function carregar(key){
     try{
-      var raw = localStorage.getItem(key);
+      var raw = storageGet(key);
       if(raw){ var v = JSON.parse(raw); if(Array.isArray(v)) return v; }
     }catch(e){}
     try{
-      var raw2 = localStorage.getItem(key + "__bak");
+      var raw2 = storageGet(key + "__bak");
       if(raw2){ var v2 = JSON.parse(raw2); if(Array.isArray(v2)) return v2; }
     }catch(e){}
     return [];
@@ -11821,11 +11859,11 @@ firebase/app/dist/esm/index.esm.js:
     lista.forEach(function(item){ if(item && !item.id) item.id = uid(); });
     try{
       var json = JSON.stringify(lista);
-      localStorage.setItem(key, json);
-      localStorage.setItem(key + "__bak", json);
-      localStorage.setItem(key + "__ts", String(Date.now()));
+      storageSet(key, json);
+      storageSet(key + "__bak", json);
+      storageSet(key + "__ts", String(Date.now()));
     }catch(e){
-      console.warn("Falha localStorage ("+key+"):", e);
+      // silencioso: dados ficam em memória e/ou Supabase
     }
   }
 
@@ -12787,25 +12825,59 @@ firebase/app/dist/esm/index.esm.js:
 
   // ---------- FORM DO GUIA ----------
   var guiaAtual = null;
-  function abrirForm(){ mostrarTela("form"); preencherForm(); }
+  function abrirForm(){
+    mostrarTela("form");
+    preencherForm();
+    // Ajusta rótulos conforme o perfil
+    var btnVoltar = document.getElementById("btn-voltar");
+    var btnLinkForm = document.getElementById("btn-link-publico-form");
+    if(sessao && sessao.tipo === "gestor"){
+      if(btnVoltar) btnVoltar.textContent = "← Voltar ao painel";
+      if(btnLinkForm){
+        btnLinkForm.textContent = "🔗 Link da sala / QR";
+        btnLinkForm.title = "Gera link/QR da sala inteira (todos os guias da turma)";
+      }
+    } else {
+      if(btnVoltar) btnVoltar.textContent = "← Voltar à lista";
+      if(btnLinkForm){
+        btnLinkForm.textContent = "🔗 Meu link / QR";
+        btnLinkForm.title = "Gera link/QR só dos seus guias nesta turma";
+      }
+    }
+  }
 
-  document.getElementById("btn-voltar").addEventListener("click", function(){ salvarAtual(false); mostrarTela("lista"); renderLista(); });
+  document.getElementById("btn-voltar").addEventListener("click", function(){
+    salvarAtual(false);
+    if(sessao && sessao.tipo === "gestor"){
+      mostrarTela("gestor");
+      try { renderPainelGestao(); } catch(e){ console.warn(e); }
+    } else {
+      mostrarTela("lista");
+      renderLista();
+    }
+  });
   document.getElementById("btn-salvar").addEventListener("click", function(){ salvarAtual(true); });
   document.getElementById("btn-exportar-pdf").addEventListener("click", function(){ salvarAtual(false); window.print(); });
   document.getElementById("btn-link-publico-form").addEventListener("click", function(){
     coletarForm();
     var turmasStr = (guiaAtual && guiaAtual.turmas) || document.getElementById("f-turmas").value || "";
     var nomes = turmasStr.split(/,| e |\/|&/).map(function(s){return s.trim();}).filter(Boolean);
-    var nomeProf = (sessao && sessao.dados && sessao.dados.nome) || (guiaAtual && guiaAtual.professor) || "";
     if(nomes.length === 0){
-      alert("Informe a(s) turma(s) no campo \"Série/Turma\" antes de gerar o seu link/QR.");
+      alert("Informe a(s) turma(s) no campo \"Série/Turma\" antes de gerar o link/QR.");
       return;
     }
+    // Gestor gera link da SALA INTEIRA; professor gera link só dos seus guias
+    var ehGestor = sessao && sessao.tipo === "gestor";
+    var nomeProf = (sessao && sessao.dados && sessao.dados.nome) || (guiaAtual && guiaAtual.professor) || "";
+    function gerar(turma){
+      if(ehGestor) copiarLinkPublico(turma);
+      else copiarLinkProfessor(turma, nomeProf);
+    }
     if(nomes.length === 1){
-      copiarLinkProfessor(nomes[0], nomeProf);
+      gerar(nomes[0]);
     } else {
-      var escolha = prompt("Este guia atende várias turmas.\nDigite o nome exato da turma para o seu link/QR:\n\n" + nomes.join("\n"), nomes[0]);
-      if(escolha && escolha.trim()) copiarLinkProfessor(escolha.trim(), nomeProf);
+      var escolha = prompt("Este guia atende várias turmas.\nDigite o nome exato da turma para o link/QR:\n\n" + nomes.join("\n"), nomes[0]);
+      if(escolha && escolha.trim()) gerar(escolha.trim());
     }
   });
   function preencherForm(){
@@ -13099,38 +13171,97 @@ firebase/app/dist/esm/index.esm.js:
           '<div class="resumo-card"><div class="num">'+listaProfs.length+'</div><div class="rot">Professores cadastrados</div></div>';
       }
 
-      // Links da sala inteira
+      // Links da sala inteira — extrai turmas de várias fontes e formatos
       var blocoLinks = document.getElementById("gestor-links-sala");
       if(blocoLinks){
+        function extrairNomesTurma(valor){
+          var out = [];
+          if(valor == null || valor === "") return out;
+          if(Array.isArray(valor)){
+            valor.forEach(function(v){ out = out.concat(extrairNomesTurma(v)); });
+            return out;
+          }
+          String(valor)
+            .split(/[,;\/|&\n\r]+|\s+e\s+/i)
+            .forEach(function(s){
+              s = String(s || "").replace(/\s+/g, " ").trim();
+              if(s && s !== "—" && s !== "-") out.push(s);
+            });
+          return out;
+        }
+
         var nomesTurmas = {};
         listaGuias.forEach(function(g){
-          if(!g || !g.turmas) return;
-          String(g.turmas).split(/,| e |\/|&/).forEach(function(s){
-            s = (s || "").trim();
-            if(s) nomesTurmas[s] = true;
-          });
+          if(!g) return;
+          // aceita turmas, turma, serie, série (variações de preenchimento)
+          var bruto = g.turmas != null ? g.turmas
+            : (g.turma != null ? g.turma
+            : (g.serie != null ? g.serie
+            : (g["série"] != null ? g["série"] : "")));
+          extrairNomesTurma(bruto).forEach(function(n){ nomesTurmas[n] = true; });
         });
         (Array.isArray(turmasConfig) ? turmasConfig : []).forEach(function(t){
-          if(t && t.nome) nomesTurmas[t.nome] = true;
+          if(t && t.nome){
+            extrairNomesTurma(t.nome).forEach(function(n){ nomesTurmas[n] = true; });
+          }
         });
+
         var listaTurmas = Object.keys(nomesTurmas).sort(function(a,b){ return a.localeCompare(b, "pt-BR"); });
+        var guiasSemTurma = listaGuias.filter(function(g){
+          if(!g) return false;
+          var bruto = g.turmas != null ? g.turmas : (g.turma != null ? g.turma : "");
+          return extrairNomesTurma(bruto).length === 0;
+        }).length;
+
         var htmlLinks = '<div style="font-size:13px;font-weight:700;color:#1f3864;margin-bottom:8px;">🔗 Link / QR da sala inteira (todos os guias da turma)</div>';
         htmlLinks += '<p style="font-size:12px;color:#555;margin:0 0 10px;">Cole no WhatsApp da turma. Alunos e famílias veem <strong>todos</strong> os guias, sem senha.</p>';
+
         if(listaTurmas.length === 0){
-          htmlLinks += '<p style="font-size:12px;color:#888;margin:0;">Nenhuma turma encontrada ainda.</p>';
+          htmlLinks += '<p style="font-size:12px;color:#b98900;margin:0 0 10px;">';
+          if(listaGuias.length === 0){
+            htmlLinks += 'Ainda não há guias cadastrados no sistema.';
+          } else if(guiasSemTurma === listaGuias.length){
+            htmlLinks += 'Há <strong>'+listaGuias.length+'</strong> guia(s), mas nenhum tem o campo <strong>Série/Turma</strong> preenchido. Abra o guia e complete a turma, ou digite o nome abaixo.';
+          } else {
+            htmlLinks += 'Nenhuma turma detectada automaticamente. Digite o nome da turma abaixo.';
+          }
+          htmlLinks += '</p>';
         } else {
-          htmlLinks += '<div style="display:flex;flex-wrap:wrap;gap:6px;">';
+          htmlLinks += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">';
           listaTurmas.forEach(function(nome){
-            htmlLinks += '<button type="button" class="secundario btn-link-sala" data-turma-sala="'+escapeHtml(nome)+'">'+escapeHtml(nome)+'</button>';
+            htmlLinks += '<button type="button" class="secundario btn-link-sala" data-turma-sala="'+escapeHtml(nome)+'">🔗 '+escapeHtml(nome)+'</button>';
           });
           htmlLinks += '</div>';
+          if(guiasSemTurma > 0){
+            htmlLinks += '<p style="font-size:11.5px;color:#b98900;margin:0 0 10px;">Atenção: '+guiasSemTurma+' guia(s) sem turma preenchida — eles não entram no link da sala até o professor informar a turma.</p>';
+          }
         }
+
+        // Sempre permite digitar a turma manualmente
+        htmlLinks += '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:4px;">';
+        htmlLinks += '<input type="text" id="gestor-turma-manual" placeholder="Ex.: 3ªADM" style="padding:6px 8px;border:1px solid #ccc;border-radius:5px;font-size:12.5px;min-width:140px;">';
+        htmlLinks += '<button type="button" id="btn-gestor-link-manual">🔗 Gerar link desta turma</button>';
+        htmlLinks += '</div>';
+
         blocoLinks.innerHTML = htmlLinks;
+
         var btns = blocoLinks.querySelectorAll(".btn-link-sala");
         for(var i = 0; i < btns.length; i++){
           btns[i].addEventListener("click", function(ev){
             var t = ev.currentTarget.getAttribute("data-turma-sala");
             if(t && typeof copiarLinkPublico === "function") copiarLinkPublico(t);
+          });
+        }
+        var btnManual = document.getElementById("btn-gestor-link-manual");
+        var inputManual = document.getElementById("gestor-turma-manual");
+        if(btnManual && inputManual){
+          btnManual.addEventListener("click", function(){
+            var t = (inputManual.value || "").trim();
+            if(!t){ alert("Digite o nome da turma (ex.: 3ªADM)."); return; }
+            if(typeof copiarLinkPublico === "function") copiarLinkPublico(t);
+          });
+          inputManual.addEventListener("keydown", function(e){
+            if(e.key === "Enter"){ e.preventDefault(); btnManual.click(); }
           });
         }
       }
@@ -13209,6 +13340,49 @@ firebase/app/dist/esm/index.esm.js:
           tdVal.appendChild(pill);
         });
         tr.appendChild(tdVal);
+
+        // Ações: Abrir guia + Link da sala
+        var tdAcoes = document.createElement("td");
+        tdAcoes.className = "no-print";
+        tdAcoes.style.whiteSpace = "nowrap";
+
+        var btnAbrir = document.createElement("button");
+        btnAbrir.type = "button";
+        btnAbrir.textContent = "Abrir";
+        btnAbrir.title = "Abrir e visualizar o guia completo";
+        btnAbrir.style.marginRight = "4px";
+        btnAbrir.addEventListener("click", function(){
+          guiaAtual = g;
+          abrirForm();
+        });
+        tdAcoes.appendChild(btnAbrir);
+
+        var btnLink = document.createElement("button");
+        btnLink.type = "button";
+        btnLink.className = "secundario";
+        btnLink.textContent = "🔗 Sala";
+        btnLink.title = "Link/QR da sala inteira (todos os guias desta turma)";
+        btnLink.addEventListener("click", function(){
+          var bruto = g.turmas != null ? g.turmas : (g.turma != null ? g.turma : "");
+          var nomes = String(bruto || "")
+            .split(/[,;\/|&\n\r]+|\s+e\s+/i)
+            .map(function(s){ return String(s || "").replace(/\s+/g, " ").trim(); })
+            .filter(function(s){ return s && s !== "—" && s !== "-"; });
+          if(nomes.length === 0){
+            var digitada = prompt("Este guia está sem turma no cadastro.\nDigite o nome da turma para gerar o link da sala (ex.: 3ªADM):", "");
+            if(digitada && digitada.trim()) copiarLinkPublico(digitada.trim());
+            return;
+          }
+          if(nomes.length === 1){
+            copiarLinkPublico(nomes[0]);
+          } else {
+            var escolha = prompt("Este guia atende várias turmas.\nDigite o nome exato da turma para o link da sala:\n\n" + nomes.join("\n"), nomes[0]);
+            if(escolha && escolha.trim()) copiarLinkPublico(escolha.trim());
+          }
+        });
+        tdAcoes.appendChild(btnLink);
+
+        tr.appendChild(tdAcoes);
         corpo.appendChild(tr);
       });
     } catch(err){
