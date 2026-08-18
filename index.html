@@ -295,7 +295,7 @@
       <button class="secundario" id="btn-voltar">← Voltar à lista</button>
       <button id="btn-salvar">💾 Salvar</button>
       <button class="secundario" id="btn-exportar-pdf">🖨️ Exportar PDF</button>
-      <button class="secundario" id="btn-link-publico-form" title="Gera link e QR Code para alunos e famílias">🔗 Link / QR da turma</button>
+      <button class="secundario" id="btn-link-publico-form" title="Gera link/QR só dos seus guias nesta turma">🔗 Meu link / QR</button>
     </div>
     <div class="status-validacao no-print" id="status-validacao"></div>
     <div class="folha" id="folha">
@@ -388,7 +388,7 @@
   <!-- Modal QR Code -->
   <div id="modal-qr" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;padding:16px;">
     <div style="background:#fff;border-radius:12px;padding:24px;max-width:360px;width:100%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.2);">
-      <h3 style="margin:0 0 6px;color:var(--azul-escuro);font-size:16px;">QR Code — Link público</h3>
+      <h3 style="margin:0 0 6px;color:var(--azul-escuro);font-size:16px;">QR Code — acesso público</h3>
       <p id="modal-qr-turma" style="font-size:13px;color:#555;margin:0 0 14px;"></p>
       <div id="modal-qr-canvas" style="display:flex;justify-content:center;margin:12px 0;"></div>
       <p id="modal-qr-url" style="font-size:11px;color:#777;word-break:break-all;margin:8px 0 16px;"></p>
@@ -411,15 +411,19 @@
   <section id="tela-gestor" class="hidden">
     <h2 class="secao" style="margin-top:0;">Painel de Gestão — Guias de Aprendizagem</h2>
     <div class="resumo-gestao" id="resumo-gestao"></div>
+    <div id="gestor-links-sala" class="no-print" style="background:#fff;border:1px solid #d7dce3;border-radius:8px;padding:12px 14px;margin-bottom:14px;"></div>
     <div class="filtros-gestao no-print">
       <input type="text" id="filtro-professor" placeholder="Filtrar por professor...">
       <input type="text" id="filtro-turma" placeholder="Filtrar por turma...">
       <input type="text" id="filtro-disciplina" placeholder="Filtrar por disciplina...">
     </div>
-    <table class="tabela-gestao">
-      <thead><tr><th>Professor</th><th>Disciplina</th><th>Turmas</th><th>Bimestre</th><th>Validações</th></tr></thead>
-      <tbody id="corpo-tabela-gestao"></tbody>
-    </table>
+    <div style="overflow-x:auto;">
+      <table class="tabela-gestao">
+        <thead><tr><th>Professor</th><th>Disciplina</th><th>Turmas</th><th>Bimestre</th><th>Validações</th></tr></thead>
+        <tbody id="corpo-tabela-gestao"></tbody>
+      </table>
+    </div>
+    <p id="gestor-msg-vazio" class="vazio hidden" style="padding:24px 0;">Nenhum guia cadastrado ainda.</p>
   </section>
 
   <!-- ===================== GERENCIAR CONTAS (GESTOR) ===================== -->
@@ -12128,7 +12132,14 @@ firebase/app/dist/esm/index.esm.js:
     contas: document.getElementById("tela-contas"),
     publico: document.getElementById("tela-publico")
   };
-  function mostrarTela(nome){ Object.keys(telas).forEach(function(k){ telas[k].classList.toggle("hidden", k !== nome); }); }
+  function mostrarTela(nome){
+    Object.keys(telas).forEach(function(k){
+      var el = telas[k];
+      if(!el) return;
+      if(k === nome) el.classList.remove("hidden");
+      else el.classList.add("hidden");
+    });
+  }
 
   function rerenderTelaAtual(){
     if(!telas.lista.classList.contains("hidden")) renderLista();
@@ -12139,9 +12150,13 @@ firebase/app/dist/esm/index.esm.js:
   }
 
   // ---------- MODO PÚBLICO + QR CODE ----------
+  // Gestor / sala: ?publico=3ªADM          → todos os guias da turma
+  // Professor:     ?publico=3ªADM&prof=Nome → só os guias daquele professor na turma
   var publicoTurma = null;
+  var publicoProf = null; // opcional: filtro por professor
   var publicoGuiaId = null;
   var ultimoLinkPublico = "";
+  var ultimoRotuloQR = "";
 
   function obterParamPublico(){
     try {
@@ -12151,18 +12166,32 @@ firebase/app/dist/esm/index.esm.js:
     } catch(e){}
     return null;
   }
-
-  function linkPublicoTurma(nomeTurma){
-    var base = window.location.href.split("?")[0].split("#")[0];
-    return base + "?publico=" + encodeURIComponent(nomeTurma);
+  function obterParamProf(){
+    try {
+      var params = new URLSearchParams(window.location.search);
+      var p = params.get("prof") || params.get("professor");
+      if(p) return decodeURIComponent(p).trim();
+    } catch(e){}
+    return null;
   }
 
-  function mostrarModalQR(nomeTurma){
-    var url = linkPublicoTurma(nomeTurma);
+  // modo: "sala" (todos) | "professor" (só um professor)
+  function linkPublicoTurma(nomeTurma, nomeProfessor){
+    var base = window.location.href.split("?")[0].split("#")[0];
+    var url = base + "?publico=" + encodeURIComponent(nomeTurma);
+    if(nomeProfessor) url += "&prof=" + encodeURIComponent(nomeProfessor);
+    return url;
+  }
+
+  function mostrarModalQR(nomeTurma, nomeProfessor){
+    var url = linkPublicoTurma(nomeTurma, nomeProfessor || null);
     ultimoLinkPublico = url;
+    ultimoRotuloQR = nomeProfessor
+      ? ("Turma " + nomeTurma + " · " + nomeProfessor)
+      : ("Turma " + nomeTurma + " · sala inteira");
     var modal = document.getElementById("modal-qr");
     var canvasBox = document.getElementById("modal-qr-canvas");
-    document.getElementById("modal-qr-turma").textContent = "Turma: " + nomeTurma;
+    document.getElementById("modal-qr-turma").textContent = ultimoRotuloQR;
     document.getElementById("modal-qr-url").textContent = url;
     canvasBox.innerHTML = "";
     modal.classList.remove("hidden");
@@ -12177,7 +12206,6 @@ firebase/app/dist/esm/index.esm.js:
         canvasBox.appendChild(canvas);
       });
     } else {
-      // Fallback via API pública de QR (imagem)
       var img = document.createElement("img");
       img.alt = "QR Code";
       img.width = 220;
@@ -12193,20 +12221,36 @@ firebase/app/dist/esm/index.esm.js:
     modal.style.display = "none";
   }
 
+  // Gestor / líder: link da sala inteira (todos os guias da turma)
   function copiarLinkPublico(nomeTurma){
-    var url = linkPublicoTurma(nomeTurma);
+    var url = linkPublicoTurma(nomeTurma, null);
     ultimoLinkPublico = url;
-    function aposCopiar(){
-      mostrarModalQR(nomeTurma);
-    }
+    function aposCopiar(){ mostrarModalQR(nomeTurma, null); }
     if(navigator.clipboard && navigator.clipboard.writeText){
       navigator.clipboard.writeText(url).then(aposCopiar).catch(function(){
-        prompt("Copie o link abaixo:", url);
-        mostrarModalQR(nomeTurma);
+        prompt("Copie o link da sala (todos os guias):", url);
+        mostrarModalQR(nomeTurma, null);
       });
     } else {
-      prompt("Copie o link abaixo:", url);
-      mostrarModalQR(nomeTurma);
+      prompt("Copie o link da sala (todos os guias):", url);
+      mostrarModalQR(nomeTurma, null);
+    }
+  }
+
+  // Professor: link só dos guias dele naquela turma
+  function copiarLinkProfessor(nomeTurma, nomeProfessor){
+    if(!nomeProfessor) nomeProfessor = (sessao && sessao.dados && sessao.dados.nome) || "";
+    var url = linkPublicoTurma(nomeTurma, nomeProfessor);
+    ultimoLinkPublico = url;
+    function aposCopiar(){ mostrarModalQR(nomeTurma, nomeProfessor); }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(url).then(aposCopiar).catch(function(){
+        prompt("Copie o seu link (somente seus guias):", url);
+        mostrarModalQR(nomeTurma, nomeProfessor);
+      });
+    } else {
+      prompt("Copie o seu link (somente seus guias):", url);
+      mostrarModalQR(nomeTurma, nomeProfessor);
     }
   }
 
@@ -12256,18 +12300,26 @@ firebase/app/dist/esm/index.esm.js:
     setTimeout(function(){ w.print(); }, 400);
   });
 
-  function guiasDaTurmaPublica(nomeTurma){
+  function guiasDaTurmaPublica(nomeTurma, nomeProfessor){
     if(!nomeTurma) return [];
     return guias.filter(function(g){
       if(!g.turmas) return false;
-      return g.turmas.toLowerCase().indexOf(nomeTurma.toLowerCase()) !== -1;
+      if(g.turmas.toLowerCase().indexOf(nomeTurma.toLowerCase()) === -1) return false;
+      if(nomeProfessor){
+        var gp = (g.professor || "").toLowerCase();
+        return gp === nomeProfessor.toLowerCase() || gp.indexOf(nomeProfessor.toLowerCase()) !== -1;
+      }
+      return true;
     }).slice().sort(function(a,b){ return (b.atualizadoEm||0) - (a.atualizadoEm||0); });
   }
 
   function renderTelaPublico(){
     if(!publicoTurma) return;
-    document.getElementById("publico-titulo").textContent = "Guia de Aprendizagem — " + publicoTurma;
-    document.getElementById("publico-subtitulo").textContent = "Visualização pública para alunos e famílias · somente leitura · E.E. Prof. Luiz Simioni Sobrinho";
+    var tituloExtra = publicoProf ? (" · " + publicoProf) : " · sala inteira";
+    document.getElementById("publico-titulo").textContent = "Guia de Aprendizagem — " + publicoTurma + tituloExtra;
+    document.getElementById("publico-subtitulo").textContent = publicoProf
+      ? ("Guias do(a) professor(a) " + publicoProf + " · visualização pública · E.E. Prof. Luiz Simioni Sobrinho")
+      : "Todos os guias da turma · visualização pública para alunos e famílias · E.E. Prof. Luiz Simioni Sobrinho";
 
     var listaEl = document.getElementById("publico-lista");
     var vazioEl = document.getElementById("publico-msg-vazio");
@@ -12288,7 +12340,7 @@ firebase/app/dist/esm/index.esm.js:
     btnVoltar.classList.add("hidden");
     listaEl.classList.remove("hidden");
 
-    var lista = guiasDaTurmaPublica(publicoTurma);
+    var lista = guiasDaTurmaPublica(publicoTurma, publicoProf);
     listaEl.innerHTML = "";
     vazioEl.classList.toggle("hidden", lista.length > 0);
 
@@ -12400,11 +12452,14 @@ firebase/app/dist/esm/index.esm.js:
     var titulo = document.getElementById("titulo-header");
 
     if(publicoTurma && !sessao){
-      titulo.textContent = "📘 Guia público — " + publicoTurma;
-      el.innerHTML = '<span class="sessao-info">Visualização pública · <b>' + escapeHtml(publicoTurma) + '</b></span>' +
+      titulo.textContent = "📘 Guia público — " + publicoTurma + (publicoProf ? (" · " + publicoProf) : "");
+      el.innerHTML = '<span class="sessao-info">Visualização pública · <b>' + escapeHtml(publicoTurma) + (publicoProf ? (" · " + escapeHtml(publicoProf)) : " · sala") + '</b></span>' +
         '<button class="secundario" id="btn-publico-copiar-link">🔗 Link / QR</button>';
       var btnCopiar = document.getElementById("btn-publico-copiar-link");
-      if(btnCopiar) btnCopiar.addEventListener("click", function(){ copiarLinkPublico(publicoTurma); });
+      if(btnCopiar) btnCopiar.addEventListener("click", function(){
+        if(publicoProf) copiarLinkProfessor(publicoTurma, publicoProf);
+        else copiarLinkPublico(publicoTurma);
+      });
       return;
     }
 
@@ -12422,7 +12477,7 @@ firebase/app/dist/esm/index.esm.js:
     } else if(sessao.tipo === "lider"){
       titulo.textContent = "🎓 Líder de Turma — " + sessao.dados.turma;
       el.innerHTML = '<span id="status-conexao"></span><span class="sessao-info">Turma <b>'+escapeHtml(sessao.dados.turma)+'</b></span>' +
-        '<button class="secundario" id="btn-lider-link-publico">🔗 Link / QR</button>' +
+        '<button class="secundario" id="btn-lider-link-publico" title="Link da sala inteira">🔗 Link da sala</button>' +
         '<button class="secundario" id="btn-sair">Sair</button>';
     }
     atualizarIndicadorConexao(modoOnline);
@@ -12430,9 +12485,26 @@ firebase/app/dist/esm/index.esm.js:
     var btnSair = document.getElementById("btn-sair");
     if(btnSair) btnSair.addEventListener("click", function(){ sessao = null; mostrarTela("login"); renderHeader(); });
     var btnIrGestor = document.getElementById("btn-ir-gestor");
-    if(btnIrGestor) btnIrGestor.addEventListener("click", function(){ renderPainelGestao(); mostrarTela("gestor"); });
+    if(btnIrGestor) btnIrGestor.addEventListener("click", function(e){
+      e.preventDefault();
+      mostrarTela("gestor");
+      // Garante que a seção fique visível mesmo se classList falhar
+      var sec = document.getElementById("tela-gestor");
+      if(sec){ sec.classList.remove("hidden"); sec.style.display = ""; }
+      var secC = document.getElementById("tela-contas");
+      if(secC) secC.classList.add("hidden");
+      try { renderPainelGestao(); } catch(err){ console.error("Painel gestão:", err); }
+    });
     var btnIrContas = document.getElementById("btn-ir-contas");
-    if(btnIrContas) btnIrContas.addEventListener("click", function(){ renderTelaContas(); mostrarTela("contas"); });
+    if(btnIrContas) btnIrContas.addEventListener("click", function(e){
+      e.preventDefault();
+      mostrarTela("contas");
+      var sec = document.getElementById("tela-contas");
+      if(sec){ sec.classList.remove("hidden"); sec.style.display = ""; }
+      var secG = document.getElementById("tela-gestor");
+      if(secG) secG.classList.add("hidden");
+      try { renderTelaContas(); } catch(err){ console.error("Contas:", err); }
+    });
     var btnLiderLink = document.getElementById("btn-lider-link-publico");
     if(btnLiderLink) btnLiderLink.addEventListener("click", function(){ copiarLinkPublico(sessao.dados.turma); });
   }
@@ -12596,9 +12668,11 @@ firebase/app/dist/esm/index.esm.js:
       erro.textContent = "";
       var conta = obterOuCriarGestor(usuario);
       sessao = { tipo:"gestor", dados: conta };
-      mostrarTela("gestor");
       try { renderHeader(); } catch(e){ console.warn(e); }
-      try { renderPainelGestao(); } catch(e){ console.warn(e); }
+      mostrarTela("gestor");
+      var sec = document.getElementById("tela-gestor");
+      if(sec){ sec.classList.remove("hidden"); sec.style.display = ""; }
+      try { renderPainelGestao(); } catch(e){ console.error("Painel após login:", e); }
     } catch(err) {
       console.error("Erro no login gestor:", err);
       erro.textContent = "Erro ao entrar: " + (err && err.message ? err.message : String(err));
@@ -12663,7 +12737,7 @@ firebase/app/dist/esm/index.esm.js:
         '<div class="card-acoes">' +
           '<button data-abrir="'+g.id+'">Abrir</button>' +
           '<button class="secundario" data-duplicar="'+g.id+'">Duplicar</button>' +
-          (g.turmas ? '<button class="secundario" data-link-publico="'+escapeHtml(g.turmas)+'">🔗 Link / QR</button>' : '') +
+          (g.turmas ? '<button class="secundario" data-link-prof="'+escapeHtml(g.turmas)+'" title="Link só dos seus guias nesta turma">🔗 Meu link / QR</button>' : '') +
           '<button class="perigo" data-excluir="'+g.id+'">Excluir</button>' +
         '</div>';
       elGrid.appendChild(card);
@@ -12673,7 +12747,7 @@ firebase/app/dist/esm/index.esm.js:
     var abrir = e.target.getAttribute("data-abrir");
     var duplicar = e.target.getAttribute("data-duplicar");
     var excluir = e.target.getAttribute("data-excluir");
-    var linkPub = e.target.getAttribute("data-link-publico");
+    var linkProf = e.target.getAttribute("data-link-prof");
     if(abrir){ guiaAtual = guias.find(function(g){return g.id===abrir;}); if(guiaAtual){ abrirForm(); } }
     if(duplicar){
       var original = guias.find(function(g){return g.id===duplicar;});
@@ -12689,13 +12763,14 @@ firebase/app/dist/esm/index.esm.js:
         salvarGuias(); renderLista();
       }
     }
-    if(linkPub){
-      var nomes = linkPub.split(/,| e |\/|&/).map(function(s){return s.trim();}).filter(Boolean);
+    if(linkProf){
+      var nomes = linkProf.split(/,| e |\/|&/).map(function(s){return s.trim();}).filter(Boolean);
+      var nomeProf = (sessao && sessao.dados && sessao.dados.nome) || "";
       if(nomes.length === 1){
-        copiarLinkPublico(nomes[0]);
+        copiarLinkProfessor(nomes[0], nomeProf);
       } else if(nomes.length > 1){
-        var escolha = prompt("Este guia atende várias turmas.\nDigite o nome exato da turma para o link/QR:\n\n" + nomes.join("\n"), nomes[0]);
-        if(escolha && escolha.trim()) copiarLinkPublico(escolha.trim());
+        var escolha = prompt("Este guia atende várias turmas.\nDigite o nome exato da turma para o seu link/QR:\n\n" + nomes.join("\n"), nomes[0]);
+        if(escolha && escolha.trim()) copiarLinkProfessor(escolha.trim(), nomeProf);
       }
     }
   });
@@ -12721,15 +12796,16 @@ firebase/app/dist/esm/index.esm.js:
     coletarForm();
     var turmasStr = (guiaAtual && guiaAtual.turmas) || document.getElementById("f-turmas").value || "";
     var nomes = turmasStr.split(/,| e |\/|&/).map(function(s){return s.trim();}).filter(Boolean);
+    var nomeProf = (sessao && sessao.dados && sessao.dados.nome) || (guiaAtual && guiaAtual.professor) || "";
     if(nomes.length === 0){
-      alert("Informe a(s) turma(s) no campo \"Série/Turma\" antes de gerar o link/QR.");
+      alert("Informe a(s) turma(s) no campo \"Série/Turma\" antes de gerar o seu link/QR.");
       return;
     }
     if(nomes.length === 1){
-      copiarLinkPublico(nomes[0]);
+      copiarLinkProfessor(nomes[0], nomeProf);
     } else {
-      var escolha = prompt("Este guia atende várias turmas.\nDigite o nome exato da turma para o link/QR:\n\n" + nomes.join("\n"), nomes[0]);
-      if(escolha && escolha.trim()) copiarLinkPublico(escolha.trim());
+      var escolha = prompt("Este guia atende várias turmas.\nDigite o nome exato da turma para o seu link/QR:\n\n" + nomes.join("\n"), nomes[0]);
+      if(escolha && escolha.trim()) copiarLinkProfessor(escolha.trim(), nomeProf);
     }
   });
   function preencherForm(){
@@ -12999,53 +13075,150 @@ firebase/app/dist/esm/index.esm.js:
 
   // ---------- PAINEL DE GESTÃO ----------
   function renderPainelGestao(){
-    if(!sessao || sessao.tipo !== "gestor") return;
-    var resumo = document.getElementById("resumo-gestao");
-    var total = guias.length;
-    var completos = guias.filter(function(g){ return Object.values(g.validacoes||{}).every(Boolean); }).length;
-    var semNenhumaValidacao = guias.filter(function(g){ return Object.values(g.validacoes||{}).every(function(v){return !v;}); }).length;
-    resumo.innerHTML =
-      '<div class="resumo-card"><div class="num">'+total+'</div><div class="rot">Guias cadastrados</div></div>' +
-      '<div class="resumo-card"><div class="num">'+completos+'</div><div class="rot">Totalmente validados</div></div>' +
-      '<div class="resumo-card"><div class="num">'+semNenhumaValidacao+'</div><div class="rot">Sem nenhuma validação</div></div>' +
-      '<div class="resumo-card"><div class="num">'+professores.length+'</div><div class="rot">Professores cadastrados</div></div>';
-    renderTabelaGestao();
+    try {
+      if(!sessao || sessao.tipo !== "gestor") return;
+
+      var listaGuias = Array.isArray(guias) ? guias : [];
+      var listaProfs = Array.isArray(professores) ? professores : [];
+
+      var resumo = document.getElementById("resumo-gestao");
+      if(resumo){
+        var total = listaGuias.length;
+        var completos = 0;
+        var semNenhuma = 0;
+        listaGuias.forEach(function(g){
+          var v = g && g.validacoes ? g.validacoes : {};
+          var vals = [!!v.professor, !!v.pca, !!v.pcg, !!v.diretor];
+          if(vals.every(Boolean)) completos++;
+          if(vals.every(function(x){ return !x; })) semNenhuma++;
+        });
+        resumo.innerHTML =
+          '<div class="resumo-card"><div class="num">'+total+'</div><div class="rot">Guias cadastrados</div></div>' +
+          '<div class="resumo-card"><div class="num">'+completos+'</div><div class="rot">Totalmente validados</div></div>' +
+          '<div class="resumo-card"><div class="num">'+semNenhuma+'</div><div class="rot">Sem nenhuma validação</div></div>' +
+          '<div class="resumo-card"><div class="num">'+listaProfs.length+'</div><div class="rot">Professores cadastrados</div></div>';
+      }
+
+      // Links da sala inteira
+      var blocoLinks = document.getElementById("gestor-links-sala");
+      if(blocoLinks){
+        var nomesTurmas = {};
+        listaGuias.forEach(function(g){
+          if(!g || !g.turmas) return;
+          String(g.turmas).split(/,| e |\/|&/).forEach(function(s){
+            s = (s || "").trim();
+            if(s) nomesTurmas[s] = true;
+          });
+        });
+        (Array.isArray(turmasConfig) ? turmasConfig : []).forEach(function(t){
+          if(t && t.nome) nomesTurmas[t.nome] = true;
+        });
+        var listaTurmas = Object.keys(nomesTurmas).sort(function(a,b){ return a.localeCompare(b, "pt-BR"); });
+        var htmlLinks = '<div style="font-size:13px;font-weight:700;color:#1f3864;margin-bottom:8px;">🔗 Link / QR da sala inteira (todos os guias da turma)</div>';
+        htmlLinks += '<p style="font-size:12px;color:#555;margin:0 0 10px;">Cole no WhatsApp da turma. Alunos e famílias veem <strong>todos</strong> os guias, sem senha.</p>';
+        if(listaTurmas.length === 0){
+          htmlLinks += '<p style="font-size:12px;color:#888;margin:0;">Nenhuma turma encontrada ainda.</p>';
+        } else {
+          htmlLinks += '<div style="display:flex;flex-wrap:wrap;gap:6px;">';
+          listaTurmas.forEach(function(nome){
+            htmlLinks += '<button type="button" class="secundario btn-link-sala" data-turma-sala="'+escapeHtml(nome)+'">'+escapeHtml(nome)+'</button>';
+          });
+          htmlLinks += '</div>';
+        }
+        blocoLinks.innerHTML = htmlLinks;
+        var btns = blocoLinks.querySelectorAll(".btn-link-sala");
+        for(var i = 0; i < btns.length; i++){
+          btns[i].addEventListener("click", function(ev){
+            var t = ev.currentTarget.getAttribute("data-turma-sala");
+            if(t && typeof copiarLinkPublico === "function") copiarLinkPublico(t);
+          });
+        }
+      }
+
+      renderTabelaGestao();
+    } catch(err){
+      console.error("Erro ao renderizar painel de gestão:", err);
+      var resumoErr = document.getElementById("resumo-gestao");
+      if(resumoErr){
+        resumoErr.innerHTML = '<p style="color:#b3261e;font-size:13px;">Erro ao carregar o painel. Tente sair e entrar novamente.<br><small>'+escapeHtml(String(err && err.message ? err.message : err))+'</small></p>';
+      }
+    }
   }
 
   function renderTabelaGestao(){
-    var corpo = document.getElementById("corpo-tabela-gestao");
-    var fp = document.getElementById("filtro-professor").value.toLowerCase();
-    var ft = document.getElementById("filtro-turma").value.toLowerCase();
-    var fd = document.getElementById("filtro-disciplina").value.toLowerCase();
-    corpo.innerHTML = "";
-    guias.filter(function(g){
-      return (!fp || (g.professor||"").toLowerCase().indexOf(fp)!==-1) &&
-             (!ft || (g.turmas||"").toLowerCase().indexOf(ft)!==-1) &&
-             (!fd || (g.disciplina||"").toLowerCase().indexOf(fd)!==-1);
-    }).forEach(function(g){
-      var tr = document.createElement("tr");
-      var tdVal = document.createElement("td");
-      [{chave:"professor",rotulo:"Prof"},{chave:"pca",rotulo:"PAAC"},{chave:"pcg",rotulo:"CGPG"},{chave:"diretor",rotulo:"Diretor"}].forEach(function(p){
-        var podeClicar = p.chave !== "professor" && sessaoPodeValidar(p.chave);
-        var pill = document.createElement("span");
-        pill.className = "mini-pill" + (g.validacoes[p.chave]?" ok":"") + (podeClicar?" clicavel":"");
-        pill.textContent = p.rotulo + (g.validacoes[p.chave] ? " ✔" : "");
-        if(podeClicar){
-          pill.addEventListener("click", function(){
-            g.validacoes[p.chave] = !g.validacoes[p.chave];
-            persistirGuia(g);
-            renderPainelGestao();
-          });
-        }
-        tdVal.appendChild(pill);
+    try {
+      var corpo = document.getElementById("corpo-tabela-gestao");
+      var msgVazio = document.getElementById("gestor-msg-vazio");
+      if(!corpo) return;
+
+      var listaGuias = Array.isArray(guias) ? guias : [];
+      var elFp = document.getElementById("filtro-professor");
+      var elFt = document.getElementById("filtro-turma");
+      var elFd = document.getElementById("filtro-disciplina");
+      var fp = elFp ? (elFp.value || "").toLowerCase() : "";
+      var ft = elFt ? (elFt.value || "").toLowerCase() : "";
+      var fd = elFd ? (elFd.value || "").toLowerCase() : "";
+
+      var filtrados = listaGuias.filter(function(g){
+        if(!g) return false;
+        return (!fp || String(g.professor || "").toLowerCase().indexOf(fp) !== -1) &&
+               (!ft || String(g.turmas || "").toLowerCase().indexOf(ft) !== -1) &&
+               (!fd || String(g.disciplina || "").toLowerCase().indexOf(fd) !== -1);
       });
-      tr.innerHTML = '<td>'+(g.professor||"—")+'</td><td>'+(g.disciplina||"—")+'</td><td>'+(g.turmas||"—")+'</td><td>'+(g.bimestre||"—")+'/'+(g.ano||"")+'</td>';
-      tr.appendChild(tdVal);
-      corpo.appendChild(tr);
-    });
+
+      corpo.innerHTML = "";
+      if(msgVazio) msgVazio.classList.toggle("hidden", filtrados.length > 0);
+
+      filtrados.forEach(function(g){
+        if(!g.validacoes || typeof g.validacoes !== "object"){
+          g.validacoes = { professor:false, pca:false, pcg:false, diretor:false };
+        }
+        var tr = document.createElement("tr");
+
+        function tdTexto(txt){
+          var td = document.createElement("td");
+          td.textContent = txt || "—";
+          return td;
+        }
+        tr.appendChild(tdTexto(g.professor));
+        tr.appendChild(tdTexto(g.disciplina));
+        tr.appendChild(tdTexto(g.turmas));
+        tr.appendChild(tdTexto((g.bimestre || "—") + "/" + (g.ano || "")));
+
+        var tdVal = document.createElement("td");
+        var papeis = [
+          { chave:"professor", rotulo:"Prof" },
+          { chave:"pca", rotulo:"PAAC" },
+          { chave:"pcg", rotulo:"CGPG" },
+          { chave:"diretor", rotulo:"Diretor" }
+        ];
+        papeis.forEach(function(p){
+          var ok = !!g.validacoes[p.chave];
+          var podeClicar = false;
+          try { podeClicar = p.chave !== "professor" && sessaoPodeValidar(p.chave); } catch(e){}
+          var pill = document.createElement("span");
+          pill.className = "mini-pill" + (ok ? " ok" : "") + (podeClicar ? " clicavel" : "");
+          pill.textContent = p.rotulo + (ok ? " ✔" : "");
+          if(podeClicar){
+            pill.addEventListener("click", function(){
+              g.validacoes[p.chave] = !g.validacoes[p.chave];
+              try { persistirGuia(g); } catch(e){ console.warn(e); }
+              renderTabelaGestao();
+            });
+          }
+          tdVal.appendChild(pill);
+        });
+        tr.appendChild(tdVal);
+        corpo.appendChild(tr);
+      });
+    } catch(err){
+      console.error("Erro na tabela de gestão:", err);
+    }
   }
+
   ["filtro-professor","filtro-turma","filtro-disciplina"].forEach(function(id){
-    document.getElementById(id).addEventListener("input", renderTabelaGestao);
+    var el = document.getElementById(id);
+    if(el) el.addEventListener("input", function(){ try { renderTabelaGestao(); } catch(e){} });
   });
 
   // ---------- GERENCIAR CONTAS (GESTOR) ----------
@@ -13139,7 +13312,7 @@ firebase/app/dist/esm/index.esm.js:
       linha.innerHTML =
         '<input class="curto nome" type="text" value="'+escapeHtml(t.nome)+'">' +
         '<input class="curto senha" type="text" value="'+escapeHtml(t.senha)+'">' +
-        '<button class="secundario link-pub" title="Link público e QR Code para alunos e famílias">🔗 Link / QR</button>' +
+        '<button class="secundario link-pub" title="Link da sala inteira (todos os guias da turma)">🔗 Link da sala</button>' +
         '<button class="perigo remover">Remover</button>';
       linha.querySelector(".nome").addEventListener("input", function(e){ t.nome = e.target.value; salvarTurmas(); });
       linha.querySelector(".senha").addEventListener("input", function(e){ t.senha = e.target.value; salvarTurmas(); });
@@ -13164,6 +13337,7 @@ firebase/app/dist/esm/index.esm.js:
   initSupabase();
 
   publicoTurma = obterParamPublico();
+  publicoProf = obterParamProf();
   if(publicoTurma){
     mostrarTela("publico");
     renderHeader();
