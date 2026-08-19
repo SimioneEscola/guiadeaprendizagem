@@ -171,7 +171,74 @@
     .folha{ box-shadow:none; border:none; padding:0; }
     textarea, input{ border:none !important; }
     .bloco-semana{ break-inside:avoid; }
+    .publico-card, .pub-filtro, .pub-acoes{ display:none !important; }
+    .folha-publica{ box-shadow:none; border:none; }
   }
+
+  /* ---- PORTAL PÚBLICO (família / alunos) ---- */
+  .portal-banner{
+    background:linear-gradient(135deg,#1f3864,#2e5395); color:#fff; border-radius:12px;
+    padding:18px 20px; margin-bottom:18px; display:flex; gap:14px; align-items:center; flex-wrap:wrap;
+  }
+  .portal-banner img{ width:56px; height:56px; border-radius:10px; background:#fff; object-fit:contain; }
+  .portal-banner h2{ margin:0; font-size:17px; }
+  .portal-banner p{ margin:4px 0 0; font-size:12.5px; opacity:.92; }
+  .pub-filtro{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; align-items:center; }
+  .pub-filtro input, .pub-filtro select{
+    padding:8px 10px; border:1px solid #ccc; border-radius:6px; font-size:13px; font-family:inherit; background:#fff;
+  }
+  .pub-filtro select{ min-width:160px; }
+  .publico-card{
+    background:#fff; border:1px solid #d7dce3; border-left:6px solid #2e7d32; border-radius:10px;
+    padding:14px 16px; margin-bottom:12px; cursor:pointer; transition:box-shadow .15s;
+  }
+  .publico-card:hover{ box-shadow:0 4px 14px rgba(31,56,100,.12); }
+  .publico-card h3{ margin:0 0 4px; font-size:15px; color:var(--azul-escuro); }
+  .publico-card .meta{ font-size:12.5px; color:#555; }
+  .folha-publica{ background:#fff; border:1px solid #b9b9b9; padding:22px 26px; border-radius:8px; }
+  .folha-publica .campo-ro{ border:1px solid #e0e0e0; border-radius:6px; padding:8px 10px; font-size:13px; background:#fafafa; min-height:28px; white-space:pre-wrap; }
+  .folha-publica table.tabela-aulas td{ background:#fff; }
+  .cartaz-mural{
+    display:none; margin:28px auto 0; max-width:480px;
+    border:3px solid var(--azul-escuro); border-radius:14px; background:#fff;
+    padding:28px 24px; text-align:center; box-shadow:0 2px 12px rgba(0,0,0,.08);
+  }
+  .cartaz-mural.mostrar{ display:block; }
+  .cartaz-escola{ font-size:13px; font-weight:700; color:var(--azul-escuro); }
+  .cartaz-titulo{ font-size:22px; font-weight:800; color:var(--azul-escuro); margin:6px 0 2px; }
+  .cartaz-turma{ font-size:16px; font-weight:700; color:var(--azul-medio); margin-bottom:4px; }
+  .cartaz-instrucao{ font-size:13px; color:#444; line-height:1.45; margin-top:8px; }
+  .cartaz-url{ font-size:11px; color:#666; word-break:break-all; margin-top:10px; font-family:monospace; background:#f5f5f5; padding:8px; border-radius:6px; }
+  .cartaz-rodape{ font-size:11px; color:#888; margin-top:12px; font-style:italic; }
+  .painel-links-turma{ background:#fff; border:1px solid #d7dce3; border-radius:10px; padding:14px 16px; margin-bottom:16px; }
+  .painel-links-turma h3{ margin:0 0 8px; font-size:14px; color:var(--azul-escuro); }
+  .linha-link-turma{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:8px 0; border-bottom:1px solid #eee; font-size:13px; }
+  .linha-link-turma:last-child{ border-bottom:none; }
+  .linha-link-turma .nome-t{ font-weight:700; min-width:100px; color:var(--azul-escuro); }
+  .linha-link-turma img.qr-mini{ width:64px; height:64px; border:1px solid #ccc; border-radius:6px; background:#fff; }
+  @media print{
+    .cartaz-mural.mostrar{ display:block !important; box-shadow:none; page-break-inside:avoid; }
+    body.modo-cartaz .portal-banner, body.modo-cartaz .pub-filtro, body.modo-cartaz #pub-grid,
+    body.modo-cartaz #pub-vazio, body.modo-cartaz .link-box, body.modo-cartaz .pub-acoes,
+    body.modo-cartaz #pub-detalhe-wrap{ display:none !important; }
+    body.modo-cartaz .cartaz-mural{ display:block !important; border-width:3px; max-width:100%; }
+  }
+  .pub-acoes{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+  .link-box{
+    background:#f4f7fb; border:1px dashed #90a4c0; border-radius:8px; padding:10px 12px; font-size:12px;
+    word-break:break-all; margin-top:8px; color:#1f3864;
+  }
+  .toggle-pub{
+    display:flex; align-items:center; gap:8px; background:#eaf6ea; border:1px solid #a5d6a7;
+    border-radius:8px; padding:8px 12px; font-size:12.5px; margin-bottom:10px;
+  }
+  .toggle-pub input{ width:18px; height:18px; }
+  .login-publico-link{
+    display:block; text-align:center; margin-top:14px; font-size:13px; color:var(--azul-medio);
+    font-weight:600; text-decoration:underline; cursor:pointer;
+  }
+  .badge-pub{ font-size:10.5px; background:#e8f5e9; color:#1b5e20; border:1px solid #a5d6a7; border-radius:10px; padding:2px 8px; }
+  .badge-priv{ font-size:10.5px; background:#fff3e0; color:#e65100; border:1px solid #ffcc80; border-radius:10px; padding:2px 8px; }
 </style>
 </head>
 <body>
@@ -271,6 +338,7 @@
         <button id="btn-login-lider" style="width:100%;">Entrar</button>
         <div class="erro" id="erro-lider"></div>
       </div>
+      <a class="login-publico-link" id="link-acesso-publico">👨‍👩‍👧 Acesso público — famílias e alunos (sem senha)</a>
     </div>
   </section>
 
@@ -295,7 +363,12 @@
       <button class="secundario" id="btn-voltar">← Voltar à lista</button>
       <button id="btn-salvar">💾 Salvar</button>
       <button class="secundario" id="btn-exportar-pdf">🖨️ Exportar PDF</button>
-      <button class="secundario" id="btn-link-publico-form" title="Gera link/QR só dos seus guias nesta turma">🔗 Meu link / QR</button>
+      <button class="secundario" id="btn-compartilhar-guia">🔗 Link público</button>
+      <button class="secundario" id="btn-whatsapp-guia">📱 WhatsApp</button>
+    </div>
+    <div class="toggle-pub no-print">
+      <input type="checkbox" id="f-publicado" checked>
+      <label for="f-publicado"><strong>Visível no portal público</strong> (famílias e alunos podem ver sem senha)</label>
     </div>
     <div class="status-validacao no-print" id="status-validacao"></div>
     <div class="folha" id="folha">
@@ -368,38 +441,54 @@
     </div>
   </section>
 
-  <!-- ===================== VISUALIZAÇÃO PÚBLICA (família / alunos) ===================== -->
+  <!-- ===================== PORTAL PÚBLICO (família / alunos) ===================== -->
   <section id="tela-publico" class="hidden">
-    <div class="no-print" style="margin-bottom:16px; display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:space-between;">
-      <div>
-        <h2 class="secao" style="margin:0 0 4px;" id="publico-titulo">Guia de Aprendizagem — Turma</h2>
-        <p style="font-size:12.5px; color:#555; margin:0;" id="publico-subtitulo">Visualização pública para alunos e famílias · somente leitura</p>
+    <div class="portal-banner no-print">
+      <img id="pub-logo" alt="Logo" style="width:56px;height:56px;border-radius:10px;background:#fff;object-fit:contain;">
+      <div style="flex:1;">
+        <h2>Guias de Aprendizagem — Acesso público</h2>
+        <p>E.E. Prof. Luiz Simioni Sobrinho · PEI — consulta para alunos e famílias (sem senha)</p>
       </div>
-      <div style="display:flex; gap:6px; flex-wrap:wrap;">
-        <button class="secundario" id="btn-publico-imprimir">🖨️ Imprimir / PDF</button>
-        <button class="secundario hidden" id="btn-publico-voltar-lista">← Voltar à lista</button>
-      </div>
+      <button class="secundario" id="btn-pub-login" style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.5);">Área restrita</button>
     </div>
-    <div id="publico-lista" class="grid-guias"></div>
-    <div class="vazio hidden" id="publico-msg-vazio">Nenhum Guia de Aprendizagem encontrado para esta turma no momento.</div>
-    <div id="publico-detalhe" class="hidden"></div>
-  </section>
 
-  <!-- Modal QR Code -->
-  <div id="modal-qr" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;padding:16px;">
-    <div style="background:#fff;border-radius:12px;padding:24px;max-width:360px;width:100%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.2);">
-      <h3 style="margin:0 0 6px;color:var(--azul-escuro);font-size:16px;">QR Code — acesso público</h3>
-      <p id="modal-qr-turma" style="font-size:13px;color:#555;margin:0 0 14px;"></p>
-      <div id="modal-qr-canvas" style="display:flex;justify-content:center;margin:12px 0;"></div>
-      <p id="modal-qr-url" style="font-size:11px;color:#777;word-break:break-all;margin:8px 0 16px;"></p>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
-        <button id="btn-qr-copiar">📋 Copiar link</button>
-        <button class="secundario" id="btn-qr-baixar">⬇ Baixar PNG</button>
-        <button class="secundario" id="btn-qr-imprimir">🖨️ Imprimir</button>
-        <button class="secundario" id="btn-qr-fechar">Fechar</button>
+    <div id="pub-lista-wrap">
+      <div class="pub-filtro no-print">
+        <input type="text" id="pub-busca" placeholder="Buscar disciplina ou professor...">
+        <select id="pub-turma-filtro"><option value="">Todas as turmas</option></select>
+        <select id="pub-bimestre-filtro"><option value="">Todos os bimestres</option></select>
+        <button class="secundario" id="btn-pub-atualizar">↻ Atualizar</button>
+      </div>
+      <div id="pub-grid"></div>
+      <div class="vazio hidden" id="pub-vazio">Nenhum guia público disponível no momento.</div>
+      <div class="link-box no-print" id="pub-link-portal"></div>
+
+      <!-- Cartaz para mural / encadernação -->
+      <div class="cartaz-mural" id="cartaz-mural">
+        <div class="cartaz-inner">
+          <img id="cartaz-logo" alt="Logo" style="width:80px;height:80px;object-fit:contain;margin:0 auto 8px;display:block;">
+          <div class="cartaz-escola">E.E. Prof. Luiz Simioni Sobrinho — PEI</div>
+          <div class="cartaz-titulo">Guias de Aprendizagem</div>
+          <div class="cartaz-turma" id="cartaz-turma-lbl">Consulta pública</div>
+          <img id="cartaz-qr" alt="QR Code" width="200" height="200" style="display:block;margin:14px auto;border:4px solid #1f3864;border-radius:8px;background:#fff;padding:6px;">
+          <div class="cartaz-instrucao">Aponte a câmera do celular para o QR Code<br>ou acesse o link abaixo — <b>sem senha</b></div>
+          <div class="cartaz-url" id="cartaz-url-txt"></div>
+          <div class="cartaz-rodape">Alunos e famílias · visualização somente leitura</div>
+        </div>
       </div>
     </div>
-  </div>
+
+    <div id="pub-detalhe-wrap" class="hidden">
+      <div class="pub-acoes no-print">
+        <button class="secundario" id="btn-pub-voltar-lista">← Voltar à lista</button>
+        <button class="secundario" id="btn-pub-imprimir">🖨️ Imprimir guia</button>
+        <button class="secundario" id="btn-pub-cartaz">🪧 Imprimir cartaz/QR</button>
+        <button id="btn-pub-whatsapp">📱 WhatsApp</button>
+        <button class="secundario" id="btn-pub-copiar-link">🔗 Copiar link</button>
+      </div>
+      <div class="folha-publica" id="folha-publica"></div>
+    </div>
+  </section>
 
   <!-- ===================== LÍDER (CHECK DE AULAS) ===================== -->
   <section id="tela-lider" class="hidden">
@@ -410,20 +499,23 @@
   <!-- ===================== PAINEL DE GESTÃO ===================== -->
   <section id="tela-gestor" class="hidden">
     <h2 class="secao" style="margin-top:0;">Painel de Gestão — Guias de Aprendizagem</h2>
+    <div class="painel-links-turma no-print" id="painel-links-turma">
+      <h3>🔗 Links públicos por turma (WhatsApp / mural)</h3>
+      <p style="font-size:12px;color:#666;margin:0 0 10px">Copie o link ou imprima o QR para afixar no mural e nos grupos. Alunos e famílias entram <b>sem senha</b>.</p>
+      <div id="lista-links-turma"></div>
+      <button class="secundario" id="btn-copiar-portal-geral" style="margin-top:10px">📋 Copiar link geral do portal</button>
+      <button class="secundario" id="btn-cartaz-portal-geral" style="margin-top:10px">🪧 Cartaz geral com QR</button>
+    </div>
     <div class="resumo-gestao" id="resumo-gestao"></div>
-    <div id="gestor-links-sala" class="no-print" style="background:#fff;border:1px solid #d7dce3;border-radius:8px;padding:12px 14px;margin-bottom:14px;"></div>
     <div class="filtros-gestao no-print">
       <input type="text" id="filtro-professor" placeholder="Filtrar por professor...">
       <input type="text" id="filtro-turma" placeholder="Filtrar por turma...">
       <input type="text" id="filtro-disciplina" placeholder="Filtrar por disciplina...">
     </div>
-    <div style="overflow-x:auto;">
-      <table class="tabela-gestao">
-        <thead><tr><th>Professor</th><th>Disciplina</th><th>Turmas</th><th>Bimestre</th><th>Validações</th><th class="no-print">Ações</th></tr></thead>
-        <tbody id="corpo-tabela-gestao"></tbody>
-      </table>
-    </div>
-    <p id="gestor-msg-vazio" class="vazio hidden" style="padding:24px 0;">Nenhum guia cadastrado ainda.</p>
+    <table class="tabela-gestao">
+      <thead><tr><th>Professor</th><th>Disciplina</th><th>Turmas</th><th>Bimestre</th><th>Validações</th></tr></thead>
+      <tbody id="corpo-tabela-gestao"></tbody>
+    </table>
   </section>
 
   <!-- ===================== GERENCIAR CONTAS (GESTOR) ===================== -->
@@ -11737,7 +11829,6 @@ firebase/app/dist/esm/index.esm.js:
 
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
 <script>
 (function(){
   "use strict";
@@ -11805,51 +11896,13 @@ firebase/app/dist/esm/index.esm.js:
   }
 
   // ---------- ESTADO / PERSISTÊNCIA (Supabase + local robusto) ----------
-  // Fallback em memória quando localStorage está bloqueado (iframe sandbox, file:// restrito, etc.)
-  var memoriaLocal = {};
-  var storageDisponivel = null;
-
-  function testarLocalStorage(){
-    if(storageDisponivel !== null) return storageDisponivel;
-    try {
-      var k = "__guia_test__";
-      // Qualquer leitura de window.localStorage pode lançar SecurityError no sandbox
-      var ls = window.localStorage;
-      if(!ls){ storageDisponivel = false; return false; }
-      ls.setItem(k, "1");
-      ls.removeItem(k);
-      storageDisponivel = true;
-      return true;
-    } catch(e){
-      storageDisponivel = false;
-      return false;
-    }
-  }
-
-  function storageGet(key){
-    try {
-      if(testarLocalStorage()){
-        try { return window.localStorage.getItem(key); } catch(e){ /* usa memória */ }
-      }
-    } catch(e){}
-    return Object.prototype.hasOwnProperty.call(memoriaLocal, key) ? memoriaLocal[key] : null;
-  }
-  function storageSet(key, value){
-    memoriaLocal[key] = value;
-    try {
-      if(testarLocalStorage()){
-        try { window.localStorage.setItem(key, value); } catch(e){ /* já está na memória */ }
-      }
-    } catch(e){}
-  }
-
   function carregar(key){
     try{
-      var raw = storageGet(key);
+      var raw = localStorage.getItem(key);
       if(raw){ var v = JSON.parse(raw); if(Array.isArray(v)) return v; }
     }catch(e){}
     try{
-      var raw2 = storageGet(key + "__bak");
+      var raw2 = localStorage.getItem(key + "__bak");
       if(raw2){ var v2 = JSON.parse(raw2); if(Array.isArray(v2)) return v2; }
     }catch(e){}
     return [];
@@ -11859,11 +11912,11 @@ firebase/app/dist/esm/index.esm.js:
     lista.forEach(function(item){ if(item && !item.id) item.id = uid(); });
     try{
       var json = JSON.stringify(lista);
-      storageSet(key, json);
-      storageSet(key + "__bak", json);
-      storageSet(key + "__ts", String(Date.now()));
+      localStorage.setItem(key, json);
+      localStorage.setItem(key + "__bak", json);
+      localStorage.setItem(key + "__ts", String(Date.now()));
     }catch(e){
-      // silencioso: dados ficam em memória e/ou Supabase
+      console.warn("Falha localStorage ("+key+"):", e);
     }
   }
 
@@ -12156,6 +12209,7 @@ firebase/app/dist/esm/index.esm.js:
       criterios:["Prova Paulista","Participação","Autoavaliação","Plataformas","Prova Bimestral","Recuperação contínua"],
       metodologias:"", referencias:"", dataElaboracao:"",
       validacoes:{ professor:false, pca:false, pcg:false, diretor:false },
+      publicado: true,
       atualizadoEm: Date.now()
     };
   }
@@ -12170,337 +12224,18 @@ firebase/app/dist/esm/index.esm.js:
     contas: document.getElementById("tela-contas"),
     publico: document.getElementById("tela-publico")
   };
-  function mostrarTela(nome){
-    Object.keys(telas).forEach(function(k){
-      var el = telas[k];
-      if(!el) return;
-      if(k === nome) el.classList.remove("hidden");
-      else el.classList.add("hidden");
-    });
-  }
+  function mostrarTela(nome){ Object.keys(telas).forEach(function(k){ telas[k].classList.toggle("hidden", k !== nome); }); }
 
   function rerenderTelaAtual(){
     if(!telas.lista.classList.contains("hidden")) renderLista();
     if(!telas.lider.classList.contains("hidden")) renderTelaLider();
     if(!telas.gestor.classList.contains("hidden")) renderPainelGestao();
     if(!telas.contas.classList.contains("hidden")) renderTelaContas();
-    if(telas.publico && !telas.publico.classList.contains("hidden")) renderTelaPublico();
   }
-
-  // ---------- MODO PÚBLICO + QR CODE ----------
-  // Gestor / sala: ?publico=3ªADM          → todos os guias da turma
-  // Professor:     ?publico=3ªADM&prof=Nome → só os guias daquele professor na turma
-  var publicoTurma = null;
-  var publicoProf = null; // opcional: filtro por professor
-  var publicoGuiaId = null;
-  var ultimoLinkPublico = "";
-  var ultimoRotuloQR = "";
-
-  function obterParamPublico(){
-    try {
-      var params = new URLSearchParams(window.location.search);
-      var t = params.get("publico") || params.get("turma") || params.get("public");
-      if(t) return decodeURIComponent(t).trim();
-    } catch(e){}
-    return null;
-  }
-  function obterParamProf(){
-    try {
-      var params = new URLSearchParams(window.location.search);
-      var p = params.get("prof") || params.get("professor");
-      if(p) return decodeURIComponent(p).trim();
-    } catch(e){}
-    return null;
-  }
-
-  // modo: "sala" (todos) | "professor" (só um professor)
-  function linkPublicoTurma(nomeTurma, nomeProfessor){
-    var base = window.location.href.split("?")[0].split("#")[0];
-    var url = base + "?publico=" + encodeURIComponent(nomeTurma);
-    if(nomeProfessor) url += "&prof=" + encodeURIComponent(nomeProfessor);
-    return url;
-  }
-
-  function mostrarModalQR(nomeTurma, nomeProfessor){
-    var url = linkPublicoTurma(nomeTurma, nomeProfessor || null);
-    ultimoLinkPublico = url;
-    ultimoRotuloQR = nomeProfessor
-      ? ("Turma " + nomeTurma + " · " + nomeProfessor)
-      : ("Turma " + nomeTurma + " · sala inteira");
-    var modal = document.getElementById("modal-qr");
-    var canvasBox = document.getElementById("modal-qr-canvas");
-    document.getElementById("modal-qr-turma").textContent = ultimoRotuloQR;
-    document.getElementById("modal-qr-url").textContent = url;
-    canvasBox.innerHTML = "";
-    modal.classList.remove("hidden");
-    modal.style.display = "flex";
-
-    if(typeof QRCode !== "undefined"){
-      QRCode.toCanvas(document.createElement("canvas"), url, { width: 220, margin: 2, color: { dark: "#1f3864", light: "#ffffff" } }, function(err, canvas){
-        if(err){
-          canvasBox.innerHTML = '<p style="color:#b3261e;font-size:12px;">Não foi possível gerar o QR. Use o link abaixo.</p>';
-          return;
-        }
-        canvasBox.appendChild(canvas);
-      });
-    } else {
-      var img = document.createElement("img");
-      img.alt = "QR Code";
-      img.width = 220;
-      img.height = 220;
-      img.src = "https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=" + encodeURIComponent(url);
-      canvasBox.appendChild(img);
-    }
-  }
-
-  function fecharModalQR(){
-    var modal = document.getElementById("modal-qr");
-    modal.classList.add("hidden");
-    modal.style.display = "none";
-  }
-
-  // Gestor / líder: link da sala inteira (todos os guias da turma)
-  function copiarLinkPublico(nomeTurma){
-    var url = linkPublicoTurma(nomeTurma, null);
-    ultimoLinkPublico = url;
-    function aposCopiar(){ mostrarModalQR(nomeTurma, null); }
-    if(navigator.clipboard && navigator.clipboard.writeText){
-      navigator.clipboard.writeText(url).then(aposCopiar).catch(function(){
-        prompt("Copie o link da sala (todos os guias):", url);
-        mostrarModalQR(nomeTurma, null);
-      });
-    } else {
-      prompt("Copie o link da sala (todos os guias):", url);
-      mostrarModalQR(nomeTurma, null);
-    }
-  }
-
-  // Professor: link só dos guias dele naquela turma
-  function copiarLinkProfessor(nomeTurma, nomeProfessor){
-    if(!nomeProfessor) nomeProfessor = (sessao && sessao.dados && sessao.dados.nome) || "";
-    var url = linkPublicoTurma(nomeTurma, nomeProfessor);
-    ultimoLinkPublico = url;
-    function aposCopiar(){ mostrarModalQR(nomeTurma, nomeProfessor); }
-    if(navigator.clipboard && navigator.clipboard.writeText){
-      navigator.clipboard.writeText(url).then(aposCopiar).catch(function(){
-        prompt("Copie o seu link (somente seus guias):", url);
-        mostrarModalQR(nomeTurma, nomeProfessor);
-      });
-    } else {
-      prompt("Copie o seu link (somente seus guias):", url);
-      mostrarModalQR(nomeTurma, nomeProfessor);
-    }
-  }
-
-  // Eventos do modal QR
-  document.getElementById("btn-qr-fechar").addEventListener("click", fecharModalQR);
-  document.getElementById("modal-qr").addEventListener("click", function(e){ if(e.target === this) fecharModalQR(); });
-  document.getElementById("btn-qr-copiar").addEventListener("click", function(){
-    var url = ultimoLinkPublico || document.getElementById("modal-qr-url").textContent;
-    if(navigator.clipboard && navigator.clipboard.writeText){
-      navigator.clipboard.writeText(url).then(function(){ alert("Link copiado!"); });
-    } else {
-      prompt("Copie o link:", url);
-    }
-  });
-  document.getElementById("btn-qr-baixar").addEventListener("click", function(){
-    var canvas = document.querySelector("#modal-qr-canvas canvas");
-    var img = document.querySelector("#modal-qr-canvas img");
-    var a = document.createElement("a");
-    a.download = "qr-guia-" + (publicoTurma || "turma") + ".png";
-    if(canvas){
-      a.href = canvas.toDataURL("image/png");
-      a.click();
-    } else if(img){
-      a.href = img.src;
-      a.target = "_blank";
-      a.click();
-    } else {
-      alert("QR ainda não gerado.");
-    }
-  });
-  document.getElementById("btn-qr-imprimir").addEventListener("click", function(){
-    var canvas = document.querySelector("#modal-qr-canvas canvas");
-    var img = document.querySelector("#modal-qr-canvas img");
-    var turma = document.getElementById("modal-qr-turma").textContent;
-    var url = document.getElementById("modal-qr-url").textContent;
-    var src = canvas ? canvas.toDataURL("image/png") : (img ? img.src : "");
-    var w = window.open("", "_blank");
-    if(!w){ alert("Permita pop-ups para imprimir o QR."); return; }
-    w.document.write("<!DOCTYPE html><html><head><title>QR — " + turma + "</title><style>body{font-family:Segoe UI,Arial,sans-serif;text-align:center;padding:32px;} h1{font-size:18px;color:#1f3864;} img{margin:16px 0;} p{font-size:12px;color:#555;word-break:break-all;}</style></head><body>");
-    w.document.write("<h1>Guia de Aprendizagem — " + turma + "</h1>");
-    w.document.write("<p>Escaneie para abrir o guia (alunos e famílias)</p>");
-    if(src) w.document.write('<img src="'+src+'" width="260" height="260" alt="QR Code">');
-    w.document.write("<p>" + url + "</p>");
-    w.document.write("<p style='margin-top:24px;font-size:11px;'>E.E. Prof. Luiz Simioni Sobrinho — PEI</p>");
-    w.document.write("</body></html>");
-    w.document.close();
-    setTimeout(function(){ w.print(); }, 400);
-  });
-
-  function guiasDaTurmaPublica(nomeTurma, nomeProfessor){
-    if(!nomeTurma) return [];
-    return guias.filter(function(g){
-      if(!g.turmas) return false;
-      if(g.turmas.toLowerCase().indexOf(nomeTurma.toLowerCase()) === -1) return false;
-      if(nomeProfessor){
-        var gp = (g.professor || "").toLowerCase();
-        return gp === nomeProfessor.toLowerCase() || gp.indexOf(nomeProfessor.toLowerCase()) !== -1;
-      }
-      return true;
-    }).slice().sort(function(a,b){ return (b.atualizadoEm||0) - (a.atualizadoEm||0); });
-  }
-
-  function renderTelaPublico(){
-    if(!publicoTurma) return;
-    var tituloExtra = publicoProf ? (" · " + publicoProf) : " · sala inteira";
-    document.getElementById("publico-titulo").textContent = "Guia de Aprendizagem — " + publicoTurma + tituloExtra;
-    document.getElementById("publico-subtitulo").textContent = publicoProf
-      ? ("Guias do(a) professor(a) " + publicoProf + " · visualização pública · E.E. Prof. Luiz Simioni Sobrinho")
-      : "Todos os guias da turma · visualização pública para alunos e famílias · E.E. Prof. Luiz Simioni Sobrinho";
-
-    var listaEl = document.getElementById("publico-lista");
-    var vazioEl = document.getElementById("publico-msg-vazio");
-    var detalheEl = document.getElementById("publico-detalhe");
-    var btnVoltar = document.getElementById("btn-publico-voltar-lista");
-
-    if(publicoGuiaId){
-      listaEl.classList.add("hidden");
-      vazioEl.classList.add("hidden");
-      detalheEl.classList.remove("hidden");
-      btnVoltar.classList.remove("hidden");
-      renderPublicoDetalhe(publicoGuiaId);
-      return;
-    }
-
-    detalheEl.classList.add("hidden");
-    detalheEl.innerHTML = "";
-    btnVoltar.classList.add("hidden");
-    listaEl.classList.remove("hidden");
-
-    var lista = guiasDaTurmaPublica(publicoTurma, publicoProf);
-    listaEl.innerHTML = "";
-    vazioEl.classList.toggle("hidden", lista.length > 0);
-
-    lista.forEach(function(g){
-      var card = document.createElement("div");
-      card.className = "card-guia";
-      card.innerHTML =
-        '<h3>' + escapeHtml(g.disciplina || "Componente curricular") + '</h3>' +
-        '<p><strong>Professor:</strong> ' + escapeHtml(g.professor || "—") + '</p>' +
-        '<p><strong>Turmas:</strong> ' + escapeHtml(g.turmas || "—") + '</p>' +
-        '<p><strong>Bimestre:</strong> ' + escapeHtml((g.bimestre || "—") + "/" + (g.ano || "")) + '</p>' +
-        '<div class="tags">' + (g.tipo || []).map(function(t){ return '<span class="tag">' + escapeHtml(t) + '</span>'; }).join("") + '</div>' +
-        '<div class="card-acoes"><button data-ver-publico="' + g.id + '">Ver guia completo</button></div>';
-      listaEl.appendChild(card);
-    });
-  }
-
-  function renderPublicoDetalhe(guiaId){
-    var g = guias.find(function(x){ return x.id === guiaId; });
-    var detalheEl = document.getElementById("publico-detalhe");
-    if(!g){
-      detalheEl.innerHTML = '<p class="vazio">Guia não encontrado.</p>';
-      return;
-    }
-
-    var html = '<div class="folha" id="folha-publico">';
-    html += '<div class="cabecalho-escola">';
-    html += '<div class="linha1">GOVERNO DO ESTADO DE SÃO PAULO</div>';
-    html += '<div class="linha1">SECRETARIA DE ESTADO DA EDUCAÇÃO</div>';
-    html += '<div class="linha1">UNIDADE REGIONAL DE ENSINO – URE SUL 1</div>';
-    html += '<div class="escola">E.E. PROF. LUIZ SIMIONI SOBRINHO - PEI</div>';
-    html += '<div class="endereco">R. Francisco Lopes Pinto, 282 - Jardim Prudência, São Paulo - SP</div>';
-    html += '</div>';
-    html += '<div class="titulo-guia">GUIA DE APRENDIZAGEM – ' + escapeHtml(g.ano || new Date().getFullYear()) + '</div>';
-    html += '<table class="info-topo">';
-    html += '<tr><td class="label">Professor:</td><td>' + escapeHtml(g.professor || "—") + '</td>';
-    html += '<td class="label">Disciplina:</td><td>' + escapeHtml(g.disciplina || "—") + '</td></tr>';
-    html += '<tr><td class="label">Tipo:</td><td>' + escapeHtml((g.tipo || []).join(", ") || "—") + '</td>';
-    html += '<td class="label">Série/Turma:</td><td>' + escapeHtml(g.turmas || "—") + '</td></tr>';
-    html += '<tr><td class="label">Bimestre:</td><td>' + escapeHtml(g.bimestre || "—") + '</td>';
-    html += '<td class="label">Ano letivo:</td><td>' + escapeHtml(g.ano || "—") + '</td></tr>';
-    html += '</table>';
-    if(g.objetivos){
-      html += '<div class="campo-objetivos"><div class="rotulo">Objetivos Gerais:</div><div style="font-size:12.5px; white-space:pre-wrap; margin-top:4px;">' + escapeHtml(g.objetivos) + '</div></div>';
-    }
-    html += '<h2 class="secao">O que vou aprender?</h2>';
-    (g.semanas || []).forEach(function(semana){
-      html += '<div class="bloco-semana">';
-      html += '<div class="semana-topo"><strong style="color:var(--azul-escuro);">' + escapeHtml(semana.periodo || "Período") + '</strong></div>';
-      html += '<table class="tabela-aulas"><thead><tr><th class="col-num">Aula</th><th>Conteúdos</th><th>Aprendizagem Essencial</th></tr></thead><tbody>';
-      (semana.aulas || []).forEach(function(aula){
-        html += '<tr><td class="col-num">' + (aula.numero || "") + '</td>';
-        html += '<td style="white-space:pre-wrap;">' + escapeHtml(aula.conteudos || "—") + '</td>';
-        var ae = ((aula.aeCodigo || "") + " " + (aula.aeDescricao || "")).trim();
-        html += '<td style="white-space:pre-wrap;">' + escapeHtml(ae || "—") + '</td></tr>';
-      });
-      html += '</tbody></table></div>';
-    });
-    if(g.blocos){
-      html += '<h2 class="secao">Atividades e metodologias</h2><div class="grid-blocos" style="margin-bottom:16px;">';
-      Object.keys(g.blocos).forEach(function(chave){
-        var bloco = g.blocos[chave];
-        if(!bloco) return;
-        html += '<div class="bloco-check"><h4>' + escapeHtml(bloco.titulo || chave) + '</h4>';
-        (bloco.itens || []).forEach(function(item){
-          var texto = typeof item === "string" ? item : (item.texto || "");
-          var ativo = typeof item === "string" ? true : (item.ativo !== false);
-          if(ativo) html += '<div class="item-check-linha"><label><span style="margin-right:4px;">✓</span> ' + escapeHtml(texto) + '</label></div>';
-        });
-        html += '</div>';
-      });
-      ["valores","criterios"].forEach(function(chave){
-        if(!g[chave] || !g[chave].length) return;
-        var titulo = chave === "valores" ? "Valores Trabalhados" : "Critérios de Avaliação";
-        html += '<div class="bloco-check"><h4>' + titulo + '</h4>';
-        g[chave].forEach(function(item){
-          var texto = typeof item === "string" ? item : (item.texto || "");
-          var ativo = typeof item === "string" ? true : (item.ativo !== false);
-          if(ativo) html += '<div class="item-check-linha"><label><span style="margin-right:4px;">✓</span> ' + escapeHtml(texto) + '</label></div>';
-        });
-        html += '</div>';
-      });
-      html += '</div>';
-    }
-    if(g.metodologias || g.referencias){
-      html += '<div class="duas-colunas">';
-      if(g.metodologias) html += '<div class="caixa-texto-livre"><h4>Metodologias e Estratégias</h4><div style="font-size:12px; white-space:pre-wrap;">' + escapeHtml(g.metodologias) + '</div></div>';
-      if(g.referencias) html += '<div class="caixa-texto-livre"><h4>Referências</h4><div style="font-size:12px; white-space:pre-wrap;">' + escapeHtml(g.referencias) + '</div></div>';
-      html += '</div>';
-    }
-    if(g.dataElaboracao) html += '<div class="data-elaboracao">São Paulo, ' + escapeHtml(g.dataElaboracao) + '.</div>';
-    html += '<div class="obs-flex">Obs.: O Guia de Aprendizagem elaborado acima poderá sofrer alterações pedagógicas e metodológicas, já que é um plano flexível.</div></div>';
-    detalheEl.innerHTML = html;
-  }
-
-  document.getElementById("publico-lista").addEventListener("click", function(e){
-    var id = e.target.getAttribute("data-ver-publico");
-    if(!id && e.target.closest){
-      var btn = e.target.closest("[data-ver-publico]");
-      if(btn) id = btn.getAttribute("data-ver-publico");
-    }
-    if(id){ publicoGuiaId = id; renderTelaPublico(); window.scrollTo(0,0); }
-  });
-  document.getElementById("btn-publico-voltar-lista").addEventListener("click", function(){ publicoGuiaId = null; renderTelaPublico(); });
-  document.getElementById("btn-publico-imprimir").addEventListener("click", function(){ window.print(); });
 
   function renderHeader(){
     var el = document.getElementById("acoes-header");
     var titulo = document.getElementById("titulo-header");
-
-    if(publicoTurma && !sessao){
-      titulo.textContent = "📘 Guia público — " + publicoTurma + (publicoProf ? (" · " + publicoProf) : "");
-      el.innerHTML = '<span class="sessao-info">Visualização pública · <b>' + escapeHtml(publicoTurma) + (publicoProf ? (" · " + escapeHtml(publicoProf)) : " · sala") + '</b></span>' +
-        '<button class="secundario" id="btn-publico-copiar-link">🔗 Link / QR</button>';
-      var btnCopiar = document.getElementById("btn-publico-copiar-link");
-      if(btnCopiar) btnCopiar.addEventListener("click", function(){
-        if(publicoProf) copiarLinkProfessor(publicoTurma, publicoProf);
-        else copiarLinkPublico(publicoTurma);
-      });
-      return;
-    }
-
     if(!sessao){ el.innerHTML = ""; titulo.textContent = "📘 Guia de Aprendizagem"; return; }
 
     if(sessao.tipo === "professor"){
@@ -12514,37 +12249,16 @@ firebase/app/dist/esm/index.esm.js:
         '<button class="secundario" id="btn-sair">Sair</button>';
     } else if(sessao.tipo === "lider"){
       titulo.textContent = "🎓 Líder de Turma — " + sessao.dados.turma;
-      el.innerHTML = '<span id="status-conexao"></span><span class="sessao-info">Turma <b>'+escapeHtml(sessao.dados.turma)+'</b></span>' +
-        '<button class="secundario" id="btn-lider-link-publico" title="Link da sala inteira">🔗 Link da sala</button>' +
-        '<button class="secundario" id="btn-sair">Sair</button>';
+      el.innerHTML = '<span id="status-conexao"></span><span class="sessao-info">Turma <b>'+escapeHtml(sessao.dados.turma)+'</b></span><button class="secundario" id="btn-sair">Sair</button>';
     }
     atualizarIndicadorConexao(modoOnline);
 
     var btnSair = document.getElementById("btn-sair");
     if(btnSair) btnSair.addEventListener("click", function(){ sessao = null; mostrarTela("login"); renderHeader(); });
     var btnIrGestor = document.getElementById("btn-ir-gestor");
-    if(btnIrGestor) btnIrGestor.addEventListener("click", function(e){
-      e.preventDefault();
-      mostrarTela("gestor");
-      // Garante que a seção fique visível mesmo se classList falhar
-      var sec = document.getElementById("tela-gestor");
-      if(sec){ sec.classList.remove("hidden"); sec.style.display = ""; }
-      var secC = document.getElementById("tela-contas");
-      if(secC) secC.classList.add("hidden");
-      try { renderPainelGestao(); } catch(err){ console.error("Painel gestão:", err); }
-    });
+    if(btnIrGestor) btnIrGestor.addEventListener("click", function(){ renderPainelGestao(); mostrarTela("gestor"); });
     var btnIrContas = document.getElementById("btn-ir-contas");
-    if(btnIrContas) btnIrContas.addEventListener("click", function(e){
-      e.preventDefault();
-      mostrarTela("contas");
-      var sec = document.getElementById("tela-contas");
-      if(sec){ sec.classList.remove("hidden"); sec.style.display = ""; }
-      var secG = document.getElementById("tela-gestor");
-      if(secG) secG.classList.add("hidden");
-      try { renderTelaContas(); } catch(err){ console.error("Contas:", err); }
-    });
-    var btnLiderLink = document.getElementById("btn-lider-link-publico");
-    if(btnLiderLink) btnLiderLink.addEventListener("click", function(){ copiarLinkPublico(sessao.dados.turma); });
+    if(btnIrContas) btnIrContas.addEventListener("click", function(){ renderTelaContas(); mostrarTela("contas"); });
   }
 
   // ---------- ABAS DE LOGIN ----------
@@ -12706,11 +12420,9 @@ firebase/app/dist/esm/index.esm.js:
       erro.textContent = "";
       var conta = obterOuCriarGestor(usuario);
       sessao = { tipo:"gestor", dados: conta };
-      try { renderHeader(); } catch(e){ console.warn(e); }
       mostrarTela("gestor");
-      var sec = document.getElementById("tela-gestor");
-      if(sec){ sec.classList.remove("hidden"); sec.style.display = ""; }
-      try { renderPainelGestao(); } catch(e){ console.error("Painel após login:", e); }
+      try { renderHeader(); } catch(e){ console.warn(e); }
+      try { renderPainelGestao(); } catch(e){ console.warn(e); }
     } catch(err) {
       console.error("Erro no login gestor:", err);
       erro.textContent = "Erro ao entrar: " + (err && err.message ? err.message : String(err));
@@ -12771,11 +12483,14 @@ firebase/app/dist/esm/index.esm.js:
         '<h3>'+(g.disciplina||"Sem disciplina")+'</h3>' +
         '<p><strong>Turmas:</strong> '+(g.turmas||"—")+'</p>' +
         '<p><strong>Bimestre:</strong> '+(g.bimestre||"—")+'/'+(g.ano||"")+'</p>' +
-        '<div class="tags">'+(g.tipo||[]).map(function(t){return '<span class="tag">'+t+'</span>';}).join('')+'<span class="tag">✅ '+validados+'/4 validações</span></div>' +
+        '<div class="tags">'+(g.tipo||[]).map(function(t){return '<span class="tag">'+t+'</span>';}).join('')+
+          '<span class="tag">✅ '+validados+'/4 validações</span>'+
+          (g.publicado!==false?'<span class="badge-pub">🌐 Público</span>':'<span class="badge-priv">🔒 Privado</span>')+
+        '</div>' +
         '<div class="card-acoes">' +
           '<button data-abrir="'+g.id+'">Abrir</button>' +
           '<button class="secundario" data-duplicar="'+g.id+'">Duplicar</button>' +
-          (g.turmas ? '<button class="secundario" data-link-prof="'+escapeHtml(g.turmas)+'" title="Link só dos seus guias nesta turma">🔗 Meu link / QR</button>' : '') +
+          '<button class="secundario" data-link="'+g.id+'">🔗 Link</button>' +
           '<button class="perigo" data-excluir="'+g.id+'">Excluir</button>' +
         '</div>';
       elGrid.appendChild(card);
@@ -12785,7 +12500,8 @@ firebase/app/dist/esm/index.esm.js:
     var abrir = e.target.getAttribute("data-abrir");
     var duplicar = e.target.getAttribute("data-duplicar");
     var excluir = e.target.getAttribute("data-excluir");
-    var linkProf = e.target.getAttribute("data-link-prof");
+    var linkId = e.target.getAttribute("data-link");
+    if(linkId){ copiarLinkPublicoGuia(linkId); return; }
     if(abrir){ guiaAtual = guias.find(function(g){return g.id===abrir;}); if(guiaAtual){ abrirForm(); } }
     if(duplicar){
       var original = guias.find(function(g){return g.id===duplicar;});
@@ -12799,16 +12515,6 @@ firebase/app/dist/esm/index.esm.js:
       if(confirm("Excluir este guia de aprendizagem? Esta ação não pode ser desfeita.")){
         guias = guias.filter(function(g){return g.id!==excluir;});
         salvarGuias(); renderLista();
-      }
-    }
-    if(linkProf){
-      var nomes = linkProf.split(/,| e |\/|&/).map(function(s){return s.trim();}).filter(Boolean);
-      var nomeProf = (sessao && sessao.dados && sessao.dados.nome) || "";
-      if(nomes.length === 1){
-        copiarLinkProfessor(nomes[0], nomeProf);
-      } else if(nomes.length > 1){
-        var escolha = prompt("Este guia atende várias turmas.\nDigite o nome exato da turma para o seu link/QR:\n\n" + nomes.join("\n"), nomes[0]);
-        if(escolha && escolha.trim()) copiarLinkProfessor(escolha.trim(), nomeProf);
       }
     }
   });
@@ -12825,61 +12531,11 @@ firebase/app/dist/esm/index.esm.js:
 
   // ---------- FORM DO GUIA ----------
   var guiaAtual = null;
-  function abrirForm(){
-    mostrarTela("form");
-    preencherForm();
-    // Ajusta rótulos conforme o perfil
-    var btnVoltar = document.getElementById("btn-voltar");
-    var btnLinkForm = document.getElementById("btn-link-publico-form");
-    if(sessao && sessao.tipo === "gestor"){
-      if(btnVoltar) btnVoltar.textContent = "← Voltar ao painel";
-      if(btnLinkForm){
-        btnLinkForm.textContent = "🔗 Link da sala / QR";
-        btnLinkForm.title = "Gera link/QR da sala inteira (todos os guias da turma)";
-      }
-    } else {
-      if(btnVoltar) btnVoltar.textContent = "← Voltar à lista";
-      if(btnLinkForm){
-        btnLinkForm.textContent = "🔗 Meu link / QR";
-        btnLinkForm.title = "Gera link/QR só dos seus guias nesta turma";
-      }
-    }
-  }
+  function abrirForm(){ mostrarTela("form"); preencherForm(); }
 
-  document.getElementById("btn-voltar").addEventListener("click", function(){
-    salvarAtual(false);
-    if(sessao && sessao.tipo === "gestor"){
-      mostrarTela("gestor");
-      try { renderPainelGestao(); } catch(e){ console.warn(e); }
-    } else {
-      mostrarTela("lista");
-      renderLista();
-    }
-  });
+  document.getElementById("btn-voltar").addEventListener("click", function(){ salvarAtual(false); mostrarTela("lista"); renderLista(); });
   document.getElementById("btn-salvar").addEventListener("click", function(){ salvarAtual(true); });
   document.getElementById("btn-exportar-pdf").addEventListener("click", function(){ salvarAtual(false); window.print(); });
-  document.getElementById("btn-link-publico-form").addEventListener("click", function(){
-    coletarForm();
-    var turmasStr = (guiaAtual && guiaAtual.turmas) || document.getElementById("f-turmas").value || "";
-    var nomes = turmasStr.split(/,| e |\/|&/).map(function(s){return s.trim();}).filter(Boolean);
-    if(nomes.length === 0){
-      alert("Informe a(s) turma(s) no campo \"Série/Turma\" antes de gerar o link/QR.");
-      return;
-    }
-    // Gestor gera link da SALA INTEIRA; professor gera link só dos seus guias
-    var ehGestor = sessao && sessao.tipo === "gestor";
-    var nomeProf = (sessao && sessao.dados && sessao.dados.nome) || (guiaAtual && guiaAtual.professor) || "";
-    function gerar(turma){
-      if(ehGestor) copiarLinkPublico(turma);
-      else copiarLinkProfessor(turma, nomeProf);
-    }
-    if(nomes.length === 1){
-      gerar(nomes[0]);
-    } else {
-      var escolha = prompt("Este guia atende várias turmas.\nDigite o nome exato da turma para o link/QR:\n\n" + nomes.join("\n"), nomes[0]);
-      if(escolha && escolha.trim()) gerar(escolha.trim());
-    }
-  });
   function preencherForm(){
     document.getElementById("f-professor-display").textContent = guiaAtual.professor || "—";
     document.getElementById("f-disciplina").value = guiaAtual.disciplina || "";
@@ -12892,6 +12548,8 @@ firebase/app/dist/esm/index.esm.js:
     document.getElementById("f-data").value = guiaAtual.dataElaboracao || "";
     var checks = document.querySelectorAll("#checks-tipo input");
     checks.forEach(function(c){ c.checked = (guiaAtual.tipo||[]).indexOf(c.value) !== -1; });
+    var pubEl = document.getElementById("f-publicado");
+    if(pubEl) pubEl.checked = guiaAtual.publicado !== false;
     renderSemanas(); renderBlocos(); renderValidacoes();
   }
 
@@ -12906,6 +12564,8 @@ firebase/app/dist/esm/index.esm.js:
     guiaAtual.dataElaboracao = document.getElementById("f-data").value;
     var checks = document.querySelectorAll("#checks-tipo input");
     guiaAtual.tipo = Array.prototype.filter.call(checks, function(c){return c.checked;}).map(function(c){return c.value;});
+    var pubEl = document.getElementById("f-publicado");
+    if(pubEl) guiaAtual.publicado = !!pubEl.checked;
   }
 
   function provisionarTurmas(stringTurmas){
@@ -13147,252 +12807,99 @@ firebase/app/dist/esm/index.esm.js:
 
   // ---------- PAINEL DE GESTÃO ----------
   function renderPainelGestao(){
-    try {
-      if(!sessao || sessao.tipo !== "gestor") return;
+    if(!sessao || sessao.tipo !== "gestor") return;
+    var resumo = document.getElementById("resumo-gestao");
+    var total = guias.length;
+    var completos = guias.filter(function(g){ return Object.values(g.validacoes||{}).every(Boolean); }).length;
+    var semNenhumaValidacao = guias.filter(function(g){ return Object.values(g.validacoes||{}).every(function(v){return !v;}); }).length;
+    var publicos = guias.filter(function(g){ return g.publicado !== false; }).length;
+    resumo.innerHTML =
+      '<div class="resumo-card"><div class="num">'+total+'</div><div class="rot">Guias cadastrados</div></div>' +
+      '<div class="resumo-card"><div class="num">'+publicos+'</div><div class="rot">Públicos (família)</div></div>' +
+      '<div class="resumo-card"><div class="num">'+completos+'</div><div class="rot">Totalmente validados</div></div>' +
+      '<div class="resumo-card"><div class="num">'+semNenhumaValidacao+'</div><div class="rot">Sem nenhuma validação</div></div>' +
+      '<div class="resumo-card"><div class="num">'+professores.length+'</div><div class="rot">Professores cadastrados</div></div>';
+    renderTabelaGestao();
+    renderLinksTurmasGestao();
+  }
 
-      var listaGuias = Array.isArray(guias) ? guias : [];
-      var listaProfs = Array.isArray(professores) ? professores : [];
-
-      var resumo = document.getElementById("resumo-gestao");
-      if(resumo){
-        var total = listaGuias.length;
-        var completos = 0;
-        var semNenhuma = 0;
-        listaGuias.forEach(function(g){
-          var v = g && g.validacoes ? g.validacoes : {};
-          var vals = [!!v.professor, !!v.pca, !!v.pcg, !!v.diretor];
-          if(vals.every(Boolean)) completos++;
-          if(vals.every(function(x){ return !x; })) semNenhuma++;
-        });
-        resumo.innerHTML =
-          '<div class="resumo-card"><div class="num">'+total+'</div><div class="rot">Guias cadastrados</div></div>' +
-          '<div class="resumo-card"><div class="num">'+completos+'</div><div class="rot">Totalmente validados</div></div>' +
-          '<div class="resumo-card"><div class="num">'+semNenhuma+'</div><div class="rot">Sem nenhuma validação</div></div>' +
-          '<div class="resumo-card"><div class="num">'+listaProfs.length+'</div><div class="rot">Professores cadastrados</div></div>';
-      }
-
-      // Links da sala inteira — extrai turmas de várias fontes e formatos
-      var blocoLinks = document.getElementById("gestor-links-sala");
-      if(blocoLinks){
-        function extrairNomesTurma(valor){
-          var out = [];
-          if(valor == null || valor === "") return out;
-          if(Array.isArray(valor)){
-            valor.forEach(function(v){ out = out.concat(extrairNomesTurma(v)); });
-            return out;
-          }
-          String(valor)
-            .split(/[,;\/|&\n\r]+|\s+e\s+/i)
-            .forEach(function(s){
-              s = String(s || "").replace(/\s+/g, " ").trim();
-              if(s && s !== "—" && s !== "-") out.push(s);
-            });
-          return out;
-        }
-
-        var nomesTurmas = {};
-        listaGuias.forEach(function(g){
-          if(!g) return;
-          // aceita turmas, turma, serie, série (variações de preenchimento)
-          var bruto = g.turmas != null ? g.turmas
-            : (g.turma != null ? g.turma
-            : (g.serie != null ? g.serie
-            : (g["série"] != null ? g["série"] : "")));
-          extrairNomesTurma(bruto).forEach(function(n){ nomesTurmas[n] = true; });
-        });
-        (Array.isArray(turmasConfig) ? turmasConfig : []).forEach(function(t){
-          if(t && t.nome){
-            extrairNomesTurma(t.nome).forEach(function(n){ nomesTurmas[n] = true; });
-          }
-        });
-
-        var listaTurmas = Object.keys(nomesTurmas).sort(function(a,b){ return a.localeCompare(b, "pt-BR"); });
-        var guiasSemTurma = listaGuias.filter(function(g){
-          if(!g) return false;
-          var bruto = g.turmas != null ? g.turmas : (g.turma != null ? g.turma : "");
-          return extrairNomesTurma(bruto).length === 0;
-        }).length;
-
-        var htmlLinks = '<div style="font-size:13px;font-weight:700;color:#1f3864;margin-bottom:8px;">🔗 Link / QR da sala inteira (todos os guias da turma)</div>';
-        htmlLinks += '<p style="font-size:12px;color:#555;margin:0 0 10px;">Cole no WhatsApp da turma. Alunos e famílias veem <strong>todos</strong> os guias, sem senha.</p>';
-
-        if(listaTurmas.length === 0){
-          htmlLinks += '<p style="font-size:12px;color:#b98900;margin:0 0 10px;">';
-          if(listaGuias.length === 0){
-            htmlLinks += 'Ainda não há guias cadastrados no sistema.';
-          } else if(guiasSemTurma === listaGuias.length){
-            htmlLinks += 'Há <strong>'+listaGuias.length+'</strong> guia(s), mas nenhum tem o campo <strong>Série/Turma</strong> preenchido. Abra o guia e complete a turma, ou digite o nome abaixo.';
-          } else {
-            htmlLinks += 'Nenhuma turma detectada automaticamente. Digite o nome da turma abaixo.';
-          }
-          htmlLinks += '</p>';
-        } else {
-          htmlLinks += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">';
-          listaTurmas.forEach(function(nome){
-            htmlLinks += '<button type="button" class="secundario btn-link-sala" data-turma-sala="'+escapeHtml(nome)+'">🔗 '+escapeHtml(nome)+'</button>';
-          });
-          htmlLinks += '</div>';
-          if(guiasSemTurma > 0){
-            htmlLinks += '<p style="font-size:11.5px;color:#b98900;margin:0 0 10px;">Atenção: '+guiasSemTurma+' guia(s) sem turma preenchida — eles não entram no link da sala até o professor informar a turma.</p>';
-          }
-        }
-
-        // Sempre permite digitar a turma manualmente
-        htmlLinks += '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:4px;">';
-        htmlLinks += '<input type="text" id="gestor-turma-manual" placeholder="Ex.: 3ªADM" style="padding:6px 8px;border:1px solid #ccc;border-radius:5px;font-size:12.5px;min-width:140px;">';
-        htmlLinks += '<button type="button" id="btn-gestor-link-manual">🔗 Gerar link desta turma</button>';
-        htmlLinks += '</div>';
-
-        blocoLinks.innerHTML = htmlLinks;
-
-        var btns = blocoLinks.querySelectorAll(".btn-link-sala");
-        for(var i = 0; i < btns.length; i++){
-          btns[i].addEventListener("click", function(ev){
-            var t = ev.currentTarget.getAttribute("data-turma-sala");
-            if(t && typeof copiarLinkPublico === "function") copiarLinkPublico(t);
-          });
-        }
-        var btnManual = document.getElementById("btn-gestor-link-manual");
-        var inputManual = document.getElementById("gestor-turma-manual");
-        if(btnManual && inputManual){
-          btnManual.addEventListener("click", function(){
-            var t = (inputManual.value || "").trim();
-            if(!t){ alert("Digite o nome da turma (ex.: 3ªADM)."); return; }
-            if(typeof copiarLinkPublico === "function") copiarLinkPublico(t);
-          });
-          inputManual.addEventListener("keydown", function(e){
-            if(e.key === "Enter"){ e.preventDefault(); btnManual.click(); }
-          });
-        }
-      }
-
-      renderTabelaGestao();
-    } catch(err){
-      console.error("Erro ao renderizar painel de gestão:", err);
-      var resumoErr = document.getElementById("resumo-gestao");
-      if(resumoErr){
-        resumoErr.innerHTML = '<p style="color:#b3261e;font-size:13px;">Erro ao carregar o painel. Tente sair e entrar novamente.<br><small>'+escapeHtml(String(err && err.message ? err.message : err))+'</small></p>';
-      }
+  function coletarTurmasDosGuias(){
+    var set = {};
+    (guias||[]).forEach(function(g){
+      extrairTurmasDeGuia(g).forEach(function(t){ set[t] = true; });
+    });
+    (turmasConfig||[]).forEach(function(t){ if(t && t.nome) set[t.nome] = true; });
+    return Object.keys(set).sort(function(a,b){ return a.localeCompare(b); });
+  }
+  function renderLinksTurmasGestao(){
+    var box = document.getElementById("lista-links-turma");
+    if(!box) return;
+    var turmas = coletarTurmasDosGuias();
+    if(!turmas.length){
+      box.innerHTML = '<p style="font-size:12px;color:#777">Nenhuma turma nos guias ainda. Ao salvar um guia com turma, o link aparece aqui.</p>';
+      return;
     }
+    box.innerHTML = turmas.map(function(t){
+      var url = linkTurma(t);
+      var q = qrUrl(url, 64);
+      return '<div class="linha-link-turma">'+
+        '<img class="qr-mini" src="'+q+'" alt="QR '+escapeHtml(t)+'">'+
+        '<span class="nome-t">'+escapeHtml(t)+'</span>'+
+        '<button class="secundario" data-url="'+escapeHtml(url)+'" data-act="copy" style="padding:5px 10px;font-size:12px">📋 Copiar</button>'+
+        '<button data-url="'+escapeHtml(url)+'" data-turma="'+escapeHtml(t)+'" data-act="wa" style="padding:5px 10px;font-size:12px">📱 WhatsApp</button>'+
+        '<button class="secundario" data-url="'+escapeHtml(url)+'" data-turma="'+escapeHtml(t)+'" data-act="cartaz" style="padding:5px 10px;font-size:12px">🪧 Cartaz</button>'+
+        '</div>';
+    }).join("");
+    box.querySelectorAll("button[data-act]").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var url = btn.getAttribute("data-url");
+        var turma = btn.getAttribute("data-turma") || "";
+        var act = btn.getAttribute("data-act");
+        if(act === "copy") copiarTexto(url).then(function(ok){ alert(ok ? "Link da turma "+turma+" copiado!" : url); });
+        if(act === "wa") compartilharWhatsApp(url, "📚 Guias de Aprendizagem — turma "+turma+" — E.E. Prof. Luiz Simioni Sobrinho\nAcesso sem senha:");
+        if(act === "cartaz"){
+          // abre portal filtrado e imprime cartaz
+          abrirPortalPublico({ turma: turma });
+          setTimeout(function(){ imprimirCartazMural(url, turma); }, 600);
+        }
+      });
+    });
   }
 
   function renderTabelaGestao(){
-    try {
-      var corpo = document.getElementById("corpo-tabela-gestao");
-      var msgVazio = document.getElementById("gestor-msg-vazio");
-      if(!corpo) return;
-
-      var listaGuias = Array.isArray(guias) ? guias : [];
-      var elFp = document.getElementById("filtro-professor");
-      var elFt = document.getElementById("filtro-turma");
-      var elFd = document.getElementById("filtro-disciplina");
-      var fp = elFp ? (elFp.value || "").toLowerCase() : "";
-      var ft = elFt ? (elFt.value || "").toLowerCase() : "";
-      var fd = elFd ? (elFd.value || "").toLowerCase() : "";
-
-      var filtrados = listaGuias.filter(function(g){
-        if(!g) return false;
-        return (!fp || String(g.professor || "").toLowerCase().indexOf(fp) !== -1) &&
-               (!ft || String(g.turmas || "").toLowerCase().indexOf(ft) !== -1) &&
-               (!fd || String(g.disciplina || "").toLowerCase().indexOf(fd) !== -1);
-      });
-
-      corpo.innerHTML = "";
-      if(msgVazio) msgVazio.classList.toggle("hidden", filtrados.length > 0);
-
-      filtrados.forEach(function(g){
-        if(!g.validacoes || typeof g.validacoes !== "object"){
-          g.validacoes = { professor:false, pca:false, pcg:false, diretor:false };
+    var corpo = document.getElementById("corpo-tabela-gestao");
+    var fp = document.getElementById("filtro-professor").value.toLowerCase();
+    var ft = document.getElementById("filtro-turma").value.toLowerCase();
+    var fd = document.getElementById("filtro-disciplina").value.toLowerCase();
+    corpo.innerHTML = "";
+    guias.filter(function(g){
+      return (!fp || (g.professor||"").toLowerCase().indexOf(fp)!==-1) &&
+             (!ft || (g.turmas||"").toLowerCase().indexOf(ft)!==-1) &&
+             (!fd || (g.disciplina||"").toLowerCase().indexOf(fd)!==-1);
+    }).forEach(function(g){
+      var tr = document.createElement("tr");
+      var tdVal = document.createElement("td");
+      [{chave:"professor",rotulo:"Prof"},{chave:"pca",rotulo:"PAAC"},{chave:"pcg",rotulo:"CGPG"},{chave:"diretor",rotulo:"Diretor"}].forEach(function(p){
+        var podeClicar = p.chave !== "professor" && sessaoPodeValidar(p.chave);
+        var pill = document.createElement("span");
+        pill.className = "mini-pill" + (g.validacoes[p.chave]?" ok":"") + (podeClicar?" clicavel":"");
+        pill.textContent = p.rotulo + (g.validacoes[p.chave] ? " ✔" : "");
+        if(podeClicar){
+          pill.addEventListener("click", function(){
+            g.validacoes[p.chave] = !g.validacoes[p.chave];
+            persistirGuia(g);
+            renderPainelGestao();
+          });
         }
-        var tr = document.createElement("tr");
-
-        function tdTexto(txt){
-          var td = document.createElement("td");
-          td.textContent = txt || "—";
-          return td;
-        }
-        tr.appendChild(tdTexto(g.professor));
-        tr.appendChild(tdTexto(g.disciplina));
-        tr.appendChild(tdTexto(g.turmas));
-        tr.appendChild(tdTexto((g.bimestre || "—") + "/" + (g.ano || "")));
-
-        var tdVal = document.createElement("td");
-        var papeis = [
-          { chave:"professor", rotulo:"Prof" },
-          { chave:"pca", rotulo:"PAAC" },
-          { chave:"pcg", rotulo:"CGPG" },
-          { chave:"diretor", rotulo:"Diretor" }
-        ];
-        papeis.forEach(function(p){
-          var ok = !!g.validacoes[p.chave];
-          var podeClicar = false;
-          try { podeClicar = p.chave !== "professor" && sessaoPodeValidar(p.chave); } catch(e){}
-          var pill = document.createElement("span");
-          pill.className = "mini-pill" + (ok ? " ok" : "") + (podeClicar ? " clicavel" : "");
-          pill.textContent = p.rotulo + (ok ? " ✔" : "");
-          if(podeClicar){
-            pill.addEventListener("click", function(){
-              g.validacoes[p.chave] = !g.validacoes[p.chave];
-              try { persistirGuia(g); } catch(e){ console.warn(e); }
-              renderTabelaGestao();
-            });
-          }
-          tdVal.appendChild(pill);
-        });
-        tr.appendChild(tdVal);
-
-        // Ações: Abrir guia + Link da sala
-        var tdAcoes = document.createElement("td");
-        tdAcoes.className = "no-print";
-        tdAcoes.style.whiteSpace = "nowrap";
-
-        var btnAbrir = document.createElement("button");
-        btnAbrir.type = "button";
-        btnAbrir.textContent = "Abrir";
-        btnAbrir.title = "Abrir e visualizar o guia completo";
-        btnAbrir.style.marginRight = "4px";
-        btnAbrir.addEventListener("click", function(){
-          guiaAtual = g;
-          abrirForm();
-        });
-        tdAcoes.appendChild(btnAbrir);
-
-        var btnLink = document.createElement("button");
-        btnLink.type = "button";
-        btnLink.className = "secundario";
-        btnLink.textContent = "🔗 Sala";
-        btnLink.title = "Link/QR da sala inteira (todos os guias desta turma)";
-        btnLink.addEventListener("click", function(){
-          var bruto = g.turmas != null ? g.turmas : (g.turma != null ? g.turma : "");
-          var nomes = String(bruto || "")
-            .split(/[,;\/|&\n\r]+|\s+e\s+/i)
-            .map(function(s){ return String(s || "").replace(/\s+/g, " ").trim(); })
-            .filter(function(s){ return s && s !== "—" && s !== "-"; });
-          if(nomes.length === 0){
-            var digitada = prompt("Este guia está sem turma no cadastro.\nDigite o nome da turma para gerar o link da sala (ex.: 3ªADM):", "");
-            if(digitada && digitada.trim()) copiarLinkPublico(digitada.trim());
-            return;
-          }
-          if(nomes.length === 1){
-            copiarLinkPublico(nomes[0]);
-          } else {
-            var escolha = prompt("Este guia atende várias turmas.\nDigite o nome exato da turma para o link da sala:\n\n" + nomes.join("\n"), nomes[0]);
-            if(escolha && escolha.trim()) copiarLinkPublico(escolha.trim());
-          }
-        });
-        tdAcoes.appendChild(btnLink);
-
-        tr.appendChild(tdAcoes);
-        corpo.appendChild(tr);
+        tdVal.appendChild(pill);
       });
-    } catch(err){
-      console.error("Erro na tabela de gestão:", err);
-    }
+      tr.innerHTML = '<td>'+(g.professor||"—")+'</td><td>'+(g.disciplina||"—")+'</td><td>'+(g.turmas||"—")+'</td><td>'+(g.bimestre||"—")+'/'+(g.ano||"")+'</td>';
+      tr.appendChild(tdVal);
+      corpo.appendChild(tr);
+    });
   }
-
   ["filtro-professor","filtro-turma","filtro-disciplina"].forEach(function(id){
-    var el = document.getElementById(id);
-    if(el) el.addEventListener("input", function(){ try { renderTabelaGestao(); } catch(e){} });
+    document.getElementById(id).addEventListener("input", renderTabelaGestao);
   });
 
   // ---------- GERENCIAR CONTAS (GESTOR) ----------
@@ -13486,11 +12993,9 @@ firebase/app/dist/esm/index.esm.js:
       linha.innerHTML =
         '<input class="curto nome" type="text" value="'+escapeHtml(t.nome)+'">' +
         '<input class="curto senha" type="text" value="'+escapeHtml(t.senha)+'">' +
-        '<button class="secundario link-pub" title="Link da sala inteira (todos os guias da turma)">🔗 Link da sala</button>' +
         '<button class="perigo remover">Remover</button>';
       linha.querySelector(".nome").addEventListener("input", function(e){ t.nome = e.target.value; salvarTurmas(); });
       linha.querySelector(".senha").addEventListener("input", function(e){ t.senha = e.target.value; salvarTurmas(); });
-      linha.querySelector(".link-pub").addEventListener("click", function(){ copiarLinkPublico(t.nome); });
       linha.querySelector(".remover").addEventListener("click", function(){
         if(confirm("Remover esta turma? O líder perderá o acesso.")){ turmasConfig.splice(i,1); salvarTurmas(); renderListaTurmasConfig(); }
       });
@@ -13507,16 +13012,357 @@ firebase/app/dist/esm/index.esm.js:
     renderListaTurmasConfig();
   });
 
+  // ═══════════════════════════════════════════════════════════
+  //  PORTAL PÚBLICO — famílias e alunos (sem senha)
+  //  Links:  #publico  |  #publico/turma/3ADM  |  #publico/guia/ID
+  // ═══════════════════════════════════════════════════════════
+  function baseUrlPublica(){
+    // Remove hash para montar links compartilháveis
+    return (window.location.href || "").split("#")[0].split("?")[0];
+  }
+  function linkPortal(){ return baseUrlPublica() + "#publico"; }
+  function linkTurma(turma){ return baseUrlPublica() + "#publico/turma/" + encodeURIComponent(turma); }
+  function linkGuia(id){ return baseUrlPublica() + "#publico/guia/" + encodeURIComponent(id); }
+
+  function copiarTexto(txt){
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      return navigator.clipboard.writeText(txt).then(function(){ return true; }).catch(function(){ return false; });
+    }
+    try{
+      var ta = document.createElement("textarea"); ta.value = txt; document.body.appendChild(ta);
+      ta.select(); document.execCommand("copy"); document.body.removeChild(ta); return Promise.resolve(true);
+    }catch(e){ return Promise.resolve(false); }
+  }
+  function copiarLinkPublicoGuia(id){
+    var url = linkGuia(id);
+    copiarTexto(url).then(function(ok){
+      alert(ok ? "Link público copiado!\n\n" + url + "\n\nCole no WhatsApp da turma ou imprima o QR/código do mural." : "Copie manualmente:\n" + url);
+    });
+  }
+  function compartilharWhatsApp(url, texto){
+    var msg = encodeURIComponent((texto || "Guia de Aprendizagem — E.E. Prof. Luiz Simioni Sobrinho") + "\n\n" + url);
+    window.open("https://wa.me/?text=" + msg, "_blank");
+  }
+
+  function guiasPublicos(){
+    return (guias || []).filter(function(g){ return g && g.publicado !== false; });
+  }
+  function extrairTurmasDeGuia(g){
+    if(!g || !g.turmas) return [];
+    return g.turmas.split(/,| e |\/|&|;/).map(function(s){ return s.trim(); }).filter(Boolean);
+  }
+  function guiaTemTurma(g, turma){
+    if(!turma) return true;
+    var t = turma.toLowerCase();
+    return extrairTurmasDeGuia(g).some(function(x){ return x.toLowerCase() === t || x.toLowerCase().indexOf(t) >= 0 || t.indexOf(x.toLowerCase()) >= 0; });
+  }
+
+  function montarFolhaPublica(g){
+    function esc(s){ return escapeHtml(s || ""); }
+    function itemAtivo(it){
+      if(typeof it === "string") return { texto: it, ativo: true };
+      return { texto: (it && it.texto) || "", ativo: !it || it.ativo !== false };
+    }
+    var tipos = (g.tipo || []).join(", ") || "—";
+    var semanasHtml = (g.semanas || []).map(function(sem, si){
+      var aulas = (sem.aulas || []).map(function(a){
+        return '<tr><td class="col-num">'+(a.numero||"")+'</td>'+
+          '<td>'+esc(a.conteudos)+
+            ((a.aeCodigo||a.aeDescricao)?'<div style="font-size:11px;color:#666;margin-top:4px"><b>AE:</b> '+esc(a.aeCodigo)+' '+esc(a.aeDescricao)+'</div>':'')+
+          '</td></tr>';
+      }).join("");
+      return '<div class="bloco-semana" style="margin-bottom:12px">'+
+        '<div class="semana-topo" style="background:#f6ede4;padding:6px 10px;font-weight:700;color:#1f3864">'+(esc(sem.periodo)||("Bloco "+(si+1)))+'</div>'+
+        '<table class="tabela-aulas"><thead><tr><th style="width:40px">Nº</th><th>Conteúdos / Habilidades</th></tr></thead><tbody>'+aulas+'</tbody></table></div>';
+    }).join("");
+
+    var blocosHtml = "";
+    if(g.blocos){
+      Object.keys(g.blocos).forEach(function(ch){
+        var b = g.blocos[ch];
+        var itens = (b.itens||[]).map(itemAtivo).filter(function(x){ return x.ativo; })
+          .map(function(x){ return '<div style="font-size:12.5px;margin:3px 0">✓ '+esc(x.texto)+'</div>'; }).join("");
+        blocosHtml += '<div class="bloco-check"><h4>'+esc(b.titulo||ch)+'</h4>'+(itens||'<em style="color:#999;font-size:12px">—</em>')+'</div>';
+      });
+    }
+    ["valores","criterios"].forEach(function(ch){
+      var titulo = ch === "valores" ? "Valores Trabalhados" : "Critérios de Avaliação";
+      var itens = (g[ch]||[]).map(itemAtivo).filter(function(x){ return x.ativo; })
+        .map(function(x){ return '<div style="font-size:12.5px;margin:3px 0">✓ '+esc(x.texto)+'</div>'; }).join("");
+      blocosHtml += '<div class="bloco-check"><h4>'+titulo+'</h4>'+(itens||'<em style="color:#999;font-size:12px">—</em>')+'</div>';
+    });
+
+    var logoSrc = "";
+    try{
+      var logoEl = document.querySelector(".logo-doc") || document.querySelector(".logo-login");
+      if(logoEl) logoSrc = logoEl.getAttribute("src") || "";
+    }catch(e){}
+
+    return '<div class="cabecalho-escola">'+
+      (logoSrc ? '<img class="logo-doc" src="'+logoSrc+'" alt="Logo">' : '')+
+      '<div class="linha1">GOVERNO DO ESTADO DE SÃO PAULO</div>'+
+      '<div class="linha1">SECRETARIA DE ESTADO DA EDUCAÇÃO</div>'+
+      '<div class="escola">E.E. PROF. LUIZ SIMIONI SOBRINHO - PEI</div>'+
+      '<div class="endereco">Guia de Aprendizagem — consulta pública para alunos e famílias</div>'+
+      '</div>'+
+      '<div class="titulo-guia">GUIA DE APRENDIZAGEM – '+esc(g.ano||"")+'</div>'+
+      '<table class="info-topo">'+
+      '<tr><td class="label">Professor:</td><td>'+esc(g.professor)+'</td><td class="label">Disciplina:</td><td>'+esc(g.disciplina)+'</td></tr>'+
+      '<tr><td class="label">Tipo:</td><td>'+esc(tipos)+'</td><td class="label">Série/Turma:</td><td>'+esc(g.turmas)+'</td></tr>'+
+      '<tr><td class="label">Bimestre:</td><td>'+esc(g.bimestre)+'</td><td class="label">Ano letivo:</td><td>'+esc(g.ano)+'</td></tr>'+
+      '</table>'+
+      '<div class="campo-objetivos"><div class="rotulo">Objetivos Gerais:</div><div class="campo-ro">'+esc(g.objetivos)+'</div></div>'+
+      '<h2 class="secao">O que vou aprender?</h2>'+semanasHtml+
+      '<h2 class="secao">Atividades e metodologias</h2>'+
+      '<div class="grid-blocos">'+blocosHtml+'</div>'+
+      '<div class="duas-colunas">'+
+      '<div class="caixa-texto-livre"><h4>Metodologias e Estratégias</h4><div class="campo-ro">'+esc(g.metodologias)+'</div></div>'+
+      '<div class="caixa-texto-livre"><h4>Referências</h4><div class="campo-ro">'+esc(g.referencias)+'</div></div>'+
+      '</div>'+
+      (g.dataElaboracao ? '<div class="data-elaboracao">São Paulo, '+esc(g.dataElaboracao)+'.</div>' : '')+
+      '<div class="obs-flex">Documento de consulta pública. Pode sofrer ajustes pedagógicos ao longo do bimestre.</div>';
+  }
+
+  function renderPortalLista(filtroTurma){
+    document.getElementById("pub-lista-wrap").classList.remove("hidden");
+    document.getElementById("pub-detalhe-wrap").classList.add("hidden");
+    var busca = (document.getElementById("pub-busca").value || "").toLowerCase().trim();
+    var turmaF = filtroTurma || document.getElementById("pub-turma-filtro").value || "";
+    var bimF = document.getElementById("pub-bimestre-filtro").value || "";
+    var lista = guiasPublicos().filter(function(g){
+      if(turmaF && !guiaTemTurma(g, turmaF)) return false;
+      if(bimF && String(g.bimestre||"") !== bimF) return false;
+      if(busca){
+        var blob = ((g.disciplina||"")+" "+(g.professor||"")+" "+(g.turmas||"")).toLowerCase();
+        if(blob.indexOf(busca) < 0) return false;
+      }
+      return true;
+    }).sort(function(a,b){ return (b.atualizadoEm||0) - (a.atualizadoEm||0); });
+
+    // preencher filtros de turma/bimestre
+    var turmasSet = {}, bimSet = {};
+    guiasPublicos().forEach(function(g){
+      extrairTurmasDeGuia(g).forEach(function(t){ turmasSet[t] = true; });
+      if(g.bimestre) bimSet[String(g.bimestre)] = true;
+    });
+    var selT = document.getElementById("pub-turma-filtro");
+    var curT = selT.value;
+    selT.innerHTML = '<option value="">Todas as turmas</option>' +
+      Object.keys(turmasSet).sort().map(function(t){ return '<option value="'+escapeHtml(t)+'">'+escapeHtml(t)+'</option>'; }).join("");
+    if(curT) selT.value = curT;
+    if(filtroTurma) selT.value = filtroTurma;
+
+    var selB = document.getElementById("pub-bimestre-filtro");
+    var curB = selB.value;
+    selB.innerHTML = '<option value="">Todos os bimestres</option>' +
+      Object.keys(bimSet).sort().map(function(b){ return '<option value="'+escapeHtml(b)+'">'+escapeHtml(b)+'</option>'; }).join("");
+    if(curB) selB.value = curB;
+
+    var grid = document.getElementById("pub-grid");
+    grid.innerHTML = "";
+    document.getElementById("pub-vazio").classList.toggle("hidden", lista.length > 0);
+    lista.forEach(function(g){
+      var card = document.createElement("div");
+      card.className = "publico-card";
+      card.innerHTML = '<h3>'+escapeHtml(g.disciplina||"Componente")+'</h3>'+
+        '<div class="meta"><b>Professor:</b> '+escapeHtml(g.professor||"—")+
+        ' · <b>Turmas:</b> '+escapeHtml(g.turmas||"—")+
+        ' · <b>Bimestre:</b> '+escapeHtml(g.bimestre||"—")+'/'+escapeHtml(g.ano||"")+
+        '</div>'+
+        '<div class="tags" style="margin-top:8px">'+(g.tipo||[]).map(function(t){return '<span class="tag">'+escapeHtml(t)+'</span>';}).join("")+'</div>';
+      card.addEventListener("click", function(){ abrirGuiaPublico(g.id); });
+      grid.appendChild(card);
+    });
+
+    var box = document.getElementById("pub-link-portal");
+    var urlPortal = turmaF ? linkTurma(turmaF) : linkPortal();
+    box.innerHTML = '<b>Link para WhatsApp / mural'+(turmaF ? ' (turma '+escapeHtml(turmaF)+')' : '')+':</b><br>'+
+      '<span id="pub-url-texto">'+escapeHtml(urlPortal)+'</span><br>'+
+      '<button class="secundario" style="margin-top:8px;padding:6px 12px;font-size:12px" id="btn-copiar-portal">📋 Copiar link</button> '+
+      '<button style="margin-top:8px;padding:6px 12px;font-size:12px" id="btn-wa-portal">📱 WhatsApp</button> '+
+      '<button class="secundario" style="margin-top:8px;padding:6px 12px;font-size:12px" id="btn-imprimir-cartaz-lista">🪧 Imprimir cartaz com QR</button>';
+    var btnC = document.getElementById("btn-copiar-portal");
+    if(btnC) btnC.onclick = function(){ copiarTexto(urlPortal).then(function(ok){ alert(ok ? "Link copiado!\n\nCole no grupo de WhatsApp da turma." : urlPortal); }); };
+    var btnW = document.getElementById("btn-wa-portal");
+    if(btnW) btnW.onclick = function(){
+      compartilharWhatsApp(urlPortal, "📚 Guias de Aprendizagem"+(turmaF?" — turma "+turmaF:"")+" — E.E. Prof. Luiz Simioni Sobrinho\nAcesso sem senha para alunos e famílias:");
+    };
+    var btnCartaz = document.getElementById("btn-imprimir-cartaz-lista");
+    if(btnCartaz) btnCartaz.onclick = function(){ imprimirCartazMural(urlPortal, turmaF || ""); };
+
+    atualizarCartazMural(urlPortal, turmaF || "");
+  }
+
+  function qrUrl(data, size){
+    size = size || 200;
+    return "https://api.qrserver.com/v1/create-qr-code/?size="+size+"x"+size+"&margin=8&data="+encodeURIComponent(data);
+  }
+  function atualizarCartazMural(url, turma){
+    var cartaz = document.getElementById("cartaz-mural");
+    if(!cartaz) return;
+    cartaz.classList.add("mostrar");
+    var qr = document.getElementById("cartaz-qr");
+    if(qr) qr.src = qrUrl(url, 220);
+    var lbl = document.getElementById("cartaz-turma-lbl");
+    if(lbl) lbl.textContent = turma ? ("Turma " + turma) : "Todas as turmas — consulta pública";
+    var ut = document.getElementById("cartaz-url-txt");
+    if(ut) ut.textContent = url;
+    try{
+      var src = (document.querySelector(".logo-login") || {}).src;
+      var cl = document.getElementById("cartaz-logo");
+      if(cl && src) cl.src = src;
+    }catch(e){}
+  }
+  function imprimirCartazMural(url, turma){
+    if(url) atualizarCartazMural(url, turma || "");
+    document.body.classList.add("modo-cartaz");
+    var cartaz = document.getElementById("cartaz-mural");
+    if(cartaz) cartaz.classList.add("mostrar");
+    // garante que estamos na lista pública
+    document.getElementById("pub-lista-wrap").classList.remove("hidden");
+    document.getElementById("pub-detalhe-wrap").classList.add("hidden");
+    setTimeout(function(){
+      window.print();
+      document.body.classList.remove("modo-cartaz");
+    }, 300);
+  }
+
+  function abrirGuiaPublico(id){
+    var g = guias.find(function(x){ return x.id === id; });
+    if(!g || g.publicado === false){
+      alert("Este guia não está disponível para consulta pública.");
+      renderPortalLista();
+      return;
+    }
+    document.getElementById("pub-lista-wrap").classList.add("hidden");
+    document.getElementById("pub-detalhe-wrap").classList.remove("hidden");
+    document.getElementById("folha-publica").innerHTML = montarFolhaPublica(g);
+    window.__pubGuiaAtual = g;
+    // atualiza hash sem recarregar
+    try{ history.replaceState(null, "", "#publico/guia/" + encodeURIComponent(id)); }catch(e){}
+  }
+
+  function abrirPortalPublico(opts){
+    opts = opts || {};
+    sessao = null;
+    renderHeader();
+    // logo
+    try{
+      var src = (document.querySelector(".logo-login") || {}).src;
+      var img = document.getElementById("pub-logo");
+      if(img && src) img.src = src;
+    }catch(e){}
+    mostrarTela("publico");
+    document.getElementById("titulo-header").textContent = "📘 Guias — consulta pública";
+    // garante dados do Supabase
+    if(modoOnline && supabaseClient){
+      supabaseClient.from(TABELA_AGENDA).select("dados").eq("chave","guias").maybeSingle()
+        .then(function(res){
+          if(res.data && Array.isArray(res.data.dados)){
+            guias = mesclarListasPorId(guias, res.data.dados);
+            salvarLocal(STORAGE_KEY, guias);
+          }
+          if(opts.guiaId) abrirGuiaPublico(opts.guiaId);
+          else renderPortalLista(opts.turma || "");
+        });
+    } else {
+      if(opts.guiaId) abrirGuiaPublico(opts.guiaId);
+      else renderPortalLista(opts.turma || "");
+    }
+  }
+
+  function processarHashPublico(){
+    var h = (window.location.hash || "").replace(/^#/, "");
+    if(!h) return false;
+    if(h === "publico" || h.indexOf("publico/") === 0){
+      var partes = h.split("/");
+      if(partes[1] === "guia" && partes[2]){
+        abrirPortalPublico({ guiaId: decodeURIComponent(partes[2]) });
+      } else if(partes[1] === "turma" && partes[2]){
+        abrirPortalPublico({ turma: decodeURIComponent(partes[2]) });
+      } else {
+        abrirPortalPublico({});
+      }
+      return true;
+    }
+    return false;
+  }
+
+  // Eventos do portal
+  document.getElementById("link-acesso-publico").addEventListener("click", function(){
+    try{ history.replaceState(null, "", "#publico"); }catch(e){}
+    abrirPortalPublico({});
+  });
+  document.getElementById("btn-pub-login").addEventListener("click", function(){
+    try{ history.replaceState(null, "", "#"); }catch(e){}
+    mostrarTela("login"); renderHeader();
+  });
+  document.getElementById("btn-pub-voltar-lista").addEventListener("click", function(){
+    try{ history.replaceState(null, "", "#publico"); }catch(e){}
+    window.__pubGuiaAtual = null;
+    renderPortalLista();
+  });
+  document.getElementById("btn-pub-imprimir").addEventListener("click", function(){
+    document.body.classList.remove("modo-cartaz");
+    window.print();
+  });
+  document.getElementById("btn-pub-cartaz").addEventListener("click", function(){
+    var g = window.__pubGuiaAtual;
+    var url = g ? linkGuia(g.id) : linkPortal();
+    var turma = g ? (g.turmas || "") : "";
+    imprimirCartazMural(url, turma);
+  });
+  document.getElementById("btn-pub-whatsapp").addEventListener("click", function(){
+    var g = window.__pubGuiaAtual;
+    if(!g) return;
+    compartilharWhatsApp(linkGuia(g.id), "📚 Guia de Aprendizagem — "+(g.disciplina||"")+" ("+(g.turmas||"")+")");
+  });
+  document.getElementById("btn-pub-copiar-link").addEventListener("click", function(){
+    var g = window.__pubGuiaAtual;
+    if(g) copiarLinkPublicoGuia(g.id);
+  });
+  document.getElementById("btn-pub-atualizar").addEventListener("click", function(){ abrirPortalPublico({ turma: document.getElementById("pub-turma-filtro").value }); });
+  ["pub-busca","pub-turma-filtro","pub-bimestre-filtro"].forEach(function(id){
+    document.getElementById(id).addEventListener("input", function(){ renderPortalLista(); });
+    document.getElementById(id).addEventListener("change", function(){ renderPortalLista(); });
+  });
+
+  // Botões no formulário do professor
+  document.getElementById("btn-compartilhar-guia").addEventListener("click", function(){
+    if(!guiaAtual || !guiaAtual.id){ alert("Salve o guia antes de gerar o link."); return; }
+    if(guiaAtual.publicado === false){
+      if(confirm("Este guia está marcado como privado. Publicar e gerar link?")){
+        guiaAtual.publicado = true;
+        var pe = document.getElementById("f-publicado"); if(pe) pe.checked = true;
+        salvarAtual(false);
+      } else return;
+    }
+    copiarLinkPublicoGuia(guiaAtual.id);
+  });
+  document.getElementById("btn-whatsapp-guia").addEventListener("click", function(){
+    if(!guiaAtual || !guiaAtual.id){ alert("Salve o guia antes de compartilhar."); return; }
+    if(guiaAtual.publicado === false){
+      if(confirm("Este guia está privado. Publicar e enviar no WhatsApp?")){
+        guiaAtual.publicado = true;
+        var pe = document.getElementById("f-publicado"); if(pe) pe.checked = true;
+        salvarAtual(false);
+      } else return;
+    }
+    compartilharWhatsApp(linkGuia(guiaAtual.id), "📚 Guia de Aprendizagem — "+(guiaAtual.disciplina||"")+" ("+(guiaAtual.turmas||"")+") — E.E. Prof. Luiz Simioni Sobrinho");
+  });
+
+  window.addEventListener("hashchange", function(){ processarHashPublico(); });
+  document.getElementById("btn-copiar-portal-geral").addEventListener("click", function(){
+    copiarTexto(linkPortal()).then(function(ok){ alert(ok ? "Link geral do portal copiado!" : linkPortal()); });
+  });
+  document.getElementById("btn-cartaz-portal-geral").addEventListener("click", function(){
+    abrirPortalPublico({});
+    setTimeout(function(){ imprimirCartazMural(linkPortal(), ""); }, 600);
+  });
+
   // ---------- INICIALIZAÇÃO ----------
   initSupabase();
-
-  publicoTurma = obterParamPublico();
-  publicoProf = obterParamProf();
-  if(publicoTurma){
-    mostrarTela("publico");
-    renderHeader();
-    renderTelaPublico();
-  } else {
+  if(!processarHashPublico()){
     mostrarTela("login");
     renderHeader();
   }
@@ -13525,8 +13371,8 @@ firebase/app/dist/esm/index.esm.js:
   // MERGE: combina local + Supabase; se a nuvem estiver vazia e o local tiver dados, publica na nuvem
   sincronizar("guias", function(remoto){
     if(remoto === null){
+      // falha de leitura — tenta publicar local
       if(guias.length) salvarRemoto("guias", guias);
-      if(publicoTurma) renderTelaPublico();
       return;
     }
     if(remoto.length){
@@ -13534,11 +13380,11 @@ firebase/app/dist/esm/index.esm.js:
       var mudou = merged.length !== guias.length || merged.length !== remoto.length;
       guias = merged;
       salvarLocal(STORAGE_KEY, guias);
+      // Se o local tinha itens que a nuvem não tinha, reenvia o merge
       if(mudou || guias.length > remoto.length) salvarRemoto("guias", guias);
     } else if(guias.length > 0){
       salvarRemoto("guias", guias);
     }
-    if(publicoTurma) renderTelaPublico();
   });
   sincronizar("turmas_config", function(remoto){
     if(remoto === null){ if(turmasConfig.length) salvarRemoto("turmas_config", turmasConfig); return; }
